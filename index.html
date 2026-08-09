@@ -139,7 +139,18 @@ body {
   font-size: 15px;
   margin-right: 4px;
   user-select: none;
+  /* It is an <a> to the repository, but it must still read as the wordmark. */
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius);
+  padding: 2px 4px;
+  margin-left: -4px;
+  transition: background 0.15s, opacity 0.15s;
 }
+.brand:hover { background: var(--accent-soft); }
+.brand:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.brand .logo { transition: transform 0.15s; }
+.brand:hover .logo { transform: scale(1.15); }
 .brand .dot {
   width: 10px; height: 10px; border-radius: 50%;
   background: var(--accent);
@@ -151,6 +162,15 @@ body {
 .brand .name b { color: var(--accent); font-weight: 700; }
 
 .spacer { flex: 1 1 auto; }
+/* The toolbars group controls with <span class="sep"></span>; without a rule
+   an empty inline span collapses to nothing and the groups run together. */
+.bar .sep {
+  align-self: stretch;
+  width: 1px;
+  min-height: 18px;
+  background: var(--border);
+  margin: 0 2px;
+}
 
 button, .btn {
   font: inherit;
@@ -506,6 +526,18 @@ input[type="range"] { accent-color: var(--accent); width: 100px; }
   padding: 1px 5px;
   font-size: 11px;
 }
+#modal .content a { color: var(--accent); text-decoration: none; }
+#modal .content a:hover { text-decoration: underline; }
+/* Credits strip at the foot of the help sheet. */
+#modal .credits {
+  margin: 14px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--fg-dim);
+}
+#modal .credits .dotsep { margin: 0 6px; opacity: 0.5; }
+
 #modal .actions { padding: 12px 18px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
 #modal table { width: 100%; border-collapse: collapse; font-size: 12px; }
 #modal td { padding: 3px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
@@ -522,6 +554,93 @@ input[type="range"] { accent-color: var(--accent); width: 100px; }
 #modal .arclist .arcname { word-break: break-all; font-family: var(--mono, monospace); }
 #modal .arclist .arcsize,
 #modal .arclist .arcmethod { width: 1%; white-space: nowrap; text-align: right; color: var(--fg-faint); }
+
+/* Dialog forms: the wizard and the song-properties sheet.  One label per
+ * row with a fixed-width caption keeps the two dialogs visually identical
+ * even though their fields have nothing in common. */
+#modal .form { display: flex; flex-direction: column; gap: 9px; margin: 10px 0 4px; }
+#modal .form .f {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  color: var(--fg);
+}
+#modal .form .f > span:first-child {
+  flex: 0 0 130px;
+  color: var(--fg-dim);
+  font-weight: 600;
+  text-align: right;
+}
+#modal .form .f > .c { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+#modal .form .f em { font-style: normal; color: var(--fg-faint); font-size: 11px; }
+#modal .form input[type="text"],
+#modal .form input[type="number"],
+#modal .form select,
+#modal .form textarea { width: 100%; }
+#modal .form input[type="number"] { max-width: 130px; }
+#modal .form input:disabled { opacity: 0.5; }
+#modal textarea {
+  font: inherit;
+  color: var(--fg);
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 5px 6px;
+  resize: vertical;
+}
+#modal .chk { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+#modal .chk input { accent-color: var(--accent); }
+#modal h4 {
+  margin: 16px 0 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-faint);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+}
+
+/* Wizard step breadcrumb: three states, no interaction - the Back and
+ * Next buttons stay the only way to move, so nothing here is clickable. */
+.wizsteps { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.wizsteps span {
+  flex: 1 1 0;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 5px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-sunken);
+  color: var(--fg-faint);
+  white-space: nowrap;
+}
+.wizsteps span.on { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.wizsteps span.done { color: var(--accent); border-color: var(--accent); }
+
+/* Starter-kit picker: a two column checklist of the generated samples. */
+.kit { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 6px; margin: 10px 0; }
+.kititem {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 8px;
+  align-items: center;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-sunken);
+  cursor: pointer;
+  font-size: 12px;
+}
+.kititem:hover { border-color: var(--accent); }
+.kititem input { accent-color: var(--accent); grid-row: span 2; }
+.kititem b { font-weight: 600; }
+.kititem em { font-style: normal; color: var(--fg-faint); font-size: 11px; }
 
 /* --------------------------------------------------------- helpers */
 .hint { color: var(--fg-faint); font-size: 11px; }
@@ -3239,17 +3358,23 @@ input[type="range"] { accent-color: var(--accent); width: 100px; }
 
   <!-- ------------------------------------------------------ toolbar -->
   <header class="bar" id="toolbar">
-    <div class="brand">
+    <!-- The wordmark doubles as the project link; it opens in a new tab so a
+         half-edited song is never thrown away by navigating off the page. -->
+    <a class="brand" href="https://github.com/g023/nybbletide_tracker"
+       target="_blank" rel="noopener noreferrer"
+       title="Nybbletide on GitHub (opens in a new tab)">
       <span class="logo">&#9835;</span>
       <span class="name">Nybble<b>tide</b></span>
-    </div>
+    </a>
 
+    <button id="newbtn" title="Start a new song from scratch (Ctrl+N / Alt+N)">New&hellip;</button>
     <button id="openbtn" class="primary" title="Open a module (Ctrl+O)">Open&hellip;</button>
     <button id="urlbtn" title="Load a module from a URL">URL</button>
     <input type="file" id="fileinput" accept=".mod,.s3m,.xm,.it,.zip,.arj,.lha,.lzh,.tar,.gz,.tgz,.MOD,.S3M,.XM,.IT,.ZIP,.ARJ,.LHA,.LZH" hidden>
 
     <span class="sep"></span>
 
+    <button id="songprops" title="Edit the song title, tempo, message and channel count (Ctrl+P / Alt+P)" disabled>Song&hellip;</button>
     <button id="savemod" title="Export the edited song as a ProTracker .mod (Ctrl+S)" disabled>Save .mod</button>
     <button id="savewav" title="Render the song to a 16-bit stereo .wav" disabled>Export .wav</button>
 
@@ -3360,6 +3485,10 @@ input[type="range"] { accent-color: var(--accent); width: 100px; }
             <p class="hint">
               or press <kbd>Ctrl</kbd>+<kbd>O</kbd> to browse. Everything runs locally in
               your browser - nothing is uploaded anywhere.
+            </p>
+            <p class="hint">
+              Starting from nothing? <b>New&hellip;</b> in the toolbar (<kbd>Ctrl</kbd>+<kbd>N</kbd>)
+              builds a fresh song, samples and all.
             </p>
             <p class="hint">Press <kbd>F1</kbd> at any time for the full key map.</p>
           </div>
@@ -4012,6 +4141,432 @@ input[type="range"] { accent-color: var(--accent); width: 100px; }
       s += String.fromCharCode(c >= 32 && c < 127 ? c : c > 127 ? c : 32);
     }
     return s.replace(/\s+$/, '');
+  };
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+
+/* ===== js/core/songfactory.js ======================================= */
+/* =====================================================================
+ * songfactory.js -- building songs from nothing, and reshaping them.
+ *
+ * Everything else in this project reads a file and transcodes it into the
+ * canonical model from common.js.  This file is the one place that creates
+ * that model out of thin air, for the "new song" wizard, plus the two
+ * structural edits the metadata dialog needs (changing the channel count
+ * and re-tagging the song's format flavour).
+ *
+ * ARCHITECTURE NOTES
+ * ------------------
+ * 1. A brand new song with no samples is silent and no fun, so the wizard
+ *    can seed a small synthesised kit.  Every generated sample is written
+ *    at c5speed 8363 Hz - the reference rate the whole model is normalised
+ *    to - which means the .mod exporter can store them with a finetune of
+ *    ~0 and no "tuning clamped" warning.
+ * 2. The tonal waveforms are exactly one cycle of 16 samples long, looped.
+ *    16 samples at 8363 Hz is 522.7 Hz, i.e. the note the cell says (C-5),
+ *    and a 16 point cycle carries no harmonic above the 8th, so it is
+ *    naturally band limited and stays clean when the mixer resamples it
+ *    upwards.  That is the same trick the Amiga chip-waveform modules use.
+ * 3. Format choice is expressed purely as flags on the canonical song, the
+ *    same ones the four parsers set.  There is no "MOD song object" - the
+ *    engine only ever sees the one model.
+ * ===================================================================== */
+(function (root) {
+  'use strict';
+
+  var TM = root.TM;
+
+  /* Reference rate for every generated sample: one sample at 8363 Hz is
+   * exactly note C-5 in the canonical model. */
+  var GEN_RATE = 8363;
+  var CYCLE = 16; // samples per cycle of a tonal waveform
+
+  /* Deterministic noise so two runs of the wizard produce byte-identical
+   * songs (and so the WAV export is reproducible). */
+  function noiseGen(seed) {
+    var s = seed >>> 0 || 1;
+    return function () {
+      s = (s * 1664525 + 1013904223) >>> 0;
+      return (s >>> 8) / 8388608 - 1; // -1 .. 1
+    };
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Waveform generators
+   * ---------------------------------------------------------------- */
+  function tonalWave(kind) {
+    var f = new Float32Array(CYCLE);
+    for (var i = 0; i < CYCLE; i++) {
+      var t = i / CYCLE;
+      var v;
+      if (kind === 'sine') v = Math.sin(2 * Math.PI * t);
+      else if (kind === 'square') v = t < 0.5 ? 0.85 : -0.85;
+      else if (kind === 'pulse') v = t < 0.25 ? 0.85 : -0.85;
+      else if (kind === 'saw') v = 0.92 * (1 - 2 * t);
+      else if (kind === 'triangle') v = t < 0.25 ? 4 * t : t < 0.75 ? 2 - 4 * t : 4 * t - 4;
+      else v = 0;
+      f[i] = v;
+    }
+    return f;
+  }
+
+  /* Kick: a pitch envelope from 180 Hz down to 45 Hz over ~60 ms with an
+   * exponential amplitude decay.  Integrating the frequency (rather than
+   * evaluating sin(2*pi*f(t)*t)) is what keeps the sweep phase continuous. */
+  function kickWave() {
+    var n = 2400,
+      f = new Float32Array(n),
+      phase = 0;
+    for (var i = 0; i < n; i++) {
+      var t = i / GEN_RATE;
+      var hz = 45 + 135 * Math.exp(-t * 26);
+      phase += (2 * Math.PI * hz) / GEN_RATE;
+      var env = Math.exp(-t * 9) * (1 - Math.exp(-t * 900));
+      f[i] = Math.sin(phase) * env * 0.98;
+    }
+    return f;
+  }
+
+  /* Snare: a short noise burst over a 190 Hz body tone. */
+  function snareWave() {
+    var n = 1800,
+      f = new Float32Array(n),
+      rnd = noiseGen(0x5eed);
+    for (var i = 0; i < n; i++) {
+      var t = i / GEN_RATE;
+      var body = Math.sin(2 * Math.PI * 190 * t) * Math.exp(-t * 34) * 0.45;
+      var noise = rnd() * Math.exp(-t * 20) * 0.75;
+      f[i] = Math.max(-1, Math.min(1, body + noise));
+    }
+    return f;
+  }
+
+  /* Hi-hat: differentiated noise (a cheap one-pole high pass) so it reads
+   * as metallic rather than as a burst of pink mush. */
+  function hatWave() {
+    var n = 700,
+      f = new Float32Array(n),
+      rnd = noiseGen(0xbeef),
+      prev = 0;
+    for (var i = 0; i < n; i++) {
+      var t = i / GEN_RATE;
+      var x = rnd();
+      var hp = x - prev;
+      prev = x;
+      f[i] = Math.max(-1, Math.min(1, hp * Math.exp(-t * 70) * 0.9));
+    }
+    return f;
+  }
+
+  /* ---------------------------------------------------------------- *
+   * The starter kit.  `role` is what seedGroove() looks for.
+   * ---------------------------------------------------------------- */
+  TM.STARTER_KIT = [
+    { id: 'sine', name: 'Sine Lead', role: 'lead', tonal: 'sine', volume: 48, hint: 'pure tone, good for leads and bleeps' },
+    { id: 'square', name: 'Square Lead', role: 'lead', tonal: 'square', volume: 44, hint: 'hollow chip lead' },
+    { id: 'saw', name: 'Saw Bass', role: 'bass', tonal: 'saw', volume: 48, hint: 'buzzy - the classic tracker bass' },
+    { id: 'triangle', name: 'Triangle', role: 'pad', tonal: 'triangle', volume: 52, hint: 'soft, mellow, sits under a lead' },
+    { id: 'kick', name: 'Kick', role: 'kick', drum: kickWave, volume: 64, hint: 'sine-sweep bass drum' },
+    { id: 'snare', name: 'Snare', role: 'snare', drum: snareWave, volume: 60, hint: 'noise + body tone' },
+    { id: 'hat', name: 'Hi-Hat', role: 'hat', drum: hatWave, volume: 42, hint: 'short metallic tick' }
+  ];
+
+  /** Build one canonical sample record for a starter-kit entry. */
+  TM.makeKitSample = function (spec) {
+    var smp = TM.makeSample();
+    smp.name = spec.name;
+    smp.volume = spec.volume;
+    smp.c5speed = GEN_RATE;
+    if (spec.tonal) {
+      smp.data = tonalWave(spec.tonal);
+      smp.length = smp.data.length;
+      // A one-cycle loop is what turns 16 samples into a sustained note.
+      smp.loopType = TM.LOOP_FORWARD;
+      smp.loopStart = 0;
+      smp.loopEnd = smp.length;
+    } else {
+      smp.data = spec.drum();
+      smp.length = smp.data.length;
+    }
+    return smp;
+  };
+
+  /** The instrument wrapper MOD/S3M-style songs also carry, so the engine
+   *  never needs a "no instrument layer" special case. */
+  function instrumentForSample(index, name) {
+    var ins = TM.makeInstrument();
+    ins.name = name;
+    for (var n = 0; n < 120; n++) ins.sampleMap[n] = index + 1;
+    return ins;
+  }
+  TM.instrumentForSample = instrumentForSample;
+
+  /* ---------------------------------------------------------------- *
+   * Format flavours.  These are exactly the flags the four parsers set;
+   * keeping them in one table means the wizard, the metadata dialog and
+   * the loaders cannot drift apart.
+   * ---------------------------------------------------------------- */
+  TM.FORMATS = {
+    mod: {
+      type: 'mod',
+      typeName: 'Amiga Module (.mod)',
+      label: 'ProTracker MOD',
+      note: '4 channels, 64-row patterns, Amiga periods. The only format this app can save to.',
+      maxChannels: 32,
+      fixedRows: 64,
+      instrumentMode: false,
+      apply: function (s) {
+        s.flags.amigaLimits = true;
+        s.flags.modVolSlideQuirk = true;
+        s.flags.linearSlides = false;
+        s.flags.gvScale = 1;
+        s.tracker = 'ProTracker';
+      }
+    },
+    s3m: {
+      type: 's3m',
+      typeName: 'Scream Tracker 3 (.s3m)',
+      label: 'Scream Tracker 3',
+      note: 'Up to 32 channels, variable pattern length, sample-based (no envelopes).',
+      maxChannels: 32,
+      instrumentMode: false,
+      apply: function (s) {
+        s.flags.st3Portas = true;
+        s.flags.fastVolSlides = false;
+        s.flags.linearSlides = false;
+        s.flags.gvScale = 2;
+        s.tracker = 'Scream Tracker 3';
+      }
+    },
+    xm: {
+      type: 'xm',
+      typeName: 'FastTracker II (.xm)',
+      label: 'FastTracker II XM',
+      note: 'Instruments with envelopes, linear frequency slides, up to 32 channels.',
+      maxChannels: 32,
+      instrumentMode: true,
+      apply: function (s) {
+        s.flags.linearSlides = true;
+        s.flags.xmMode = true;
+        s.flags.xmGlobalVol = true;
+        s.flags.gvScale = 2;
+        s.tracker = 'FastTracker v2.00';
+      }
+    },
+    it: {
+      type: 'it',
+      typeName: 'Impulse Tracker (.it)',
+      label: 'Impulse Tracker',
+      note: 'The richest model: NNAs, per-sample tuning, up to 64 channels.',
+      maxChannels: 64,
+      instrumentMode: true,
+      apply: function (s) {
+        s.flags.linearSlides = true;
+        s.flags.itMode = true;
+        s.flags.itCompatGxx = true;
+        s.flags.gvScale = 1;
+        s.tracker = 'Impulse Tracker 2.14';
+      }
+    }
+  };
+
+  /** Default channel panning for a format: MOD gets the Amiga LRRL layout,
+   *  S3M the ST3 LRLR one, the rest start centred. */
+  function defaultPanning(type, ch) {
+    if (type === 'mod') return ch % 4 === 0 || ch % 4 === 3 ? 64 : 192;
+    if (type === 's3m') return ch % 2 === 0 ? 64 : 192;
+    return 128;
+  }
+  TM.defaultPanning = defaultPanning;
+
+  /* ---------------------------------------------------------------- *
+   * The factory itself
+   * ---------------------------------------------------------------- */
+
+  /**
+   * Create a playable song from scratch.
+   *
+   * @param {object} opts
+   *   title, type ('mod'|'s3m'|'xm'|'it'), channels, rows, patterns,
+   *   speed, tempo, globalVolume, kit (array of STARTER_KIT ids),
+   *   emptySlots (number of blank sample slots to append), groove (bool)
+   * @returns {object} canonical song
+   */
+  TM.createSong = function (opts) {
+    opts = opts || {};
+    var fmt = TM.FORMATS[opts.type] || TM.FORMATS.mod;
+    var song = TM.makeSong();
+
+    song.type = fmt.type;
+    song.typeName = fmt.typeName;
+    song.title = String(opts.title === undefined ? '' : opts.title).substring(0, 63);
+    song.flags.instrumentMode = fmt.instrumentMode;
+    fmt.apply(song);
+
+    song.channels = TM.clamp(opts.channels | 0 || 4, 1, fmt.maxChannels);
+    var rows = TM.clamp(opts.rows | 0 || 64, 1, 256);
+    if (fmt.fixedRows) rows = fmt.fixedRows;
+    var count = TM.clamp(opts.patterns | 0 || 1, 1, 256);
+
+    song.initialSpeed = TM.clamp(opts.speed | 0 || 6, 1, 31);
+    song.initialTempo = TM.clamp(opts.tempo | 0 || 125, 32, 255);
+    song.globalVolume = TM.clamp(opts.globalVolume === undefined ? 128 : opts.globalVolume | 0, 0, 128);
+    song.mixVolume = 48;
+    song.restartPos = 0;
+    song.message = '';
+
+    for (var i = 0; i < count; i++) {
+      song.patterns.push(TM.makePattern(rows, song.channels));
+      song.orders.push(i);
+    }
+
+    for (var ch = 0; ch < song.channels; ch++) {
+      song.panning.push(defaultPanning(song.type, ch));
+      song.chanVolume.push(64);
+      song.chanMuted.push(false);
+    }
+
+    /* ---- samples ---------------------------------------------------- */
+    var wanted = opts.kit || [];
+    var roles = {};
+    TM.STARTER_KIT.forEach(function (spec) {
+      if (wanted.indexOf(spec.id) < 0) return;
+      var smp = TM.makeKitSample(spec);
+      song.samples.push(smp);
+      song.instruments.push(instrumentForSample(song.samples.length - 1, smp.name));
+      // First sample of each role wins - that is what the groove writes.
+      if (roles[spec.role] === undefined) roles[spec.role] = song.samples.length;
+    });
+
+    var blanks = TM.clamp(opts.emptySlots === undefined ? 0 : opts.emptySlots | 0, 0, 99);
+    for (i = 0; i < blanks; i++) {
+      song.samples.push(TM.makeSample());
+      song.instruments.push(instrumentForSample(song.samples.length - 1, ''));
+    }
+
+    /* Every format wants at least one slot to point notes at. */
+    if (!song.samples.length) {
+      song.samples.push(TM.makeSample());
+      song.instruments.push(instrumentForSample(0, ''));
+    }
+
+    if (opts.groove) TM.seedGroove(song, roles);
+    return song;
+  };
+
+  /* ---------------------------------------------------------------- *
+   * Starter groove.
+   *
+   * Written at the conventional four rows per beat, so a 16 row block is
+   * one bar: kick on every beat, snare on 2 and 4, hats on the offbeats
+   * and a I-I-V-IV bass line.  Roles are packed into whatever channels
+   * exist, and the drums are laid out so that two of them can share a
+   * channel without ever colliding on the same row.
+   * ---------------------------------------------------------------- */
+  TM.seedGroove = function (song, roles) {
+    var pat = song.patterns[0];
+    if (!pat || pat.rows < 4) return;
+
+    var lanes = [];
+    if (roles.kick) lanes.push({ inst: roles.kick, note: 61, every: 4, offset: 0 });
+    if (roles.snare) lanes.push({ inst: roles.snare, note: 61, every: 8, offset: 4 });
+    if (roles.hat) lanes.push({ inst: roles.hat, note: 61, every: 2, offset: 2 });
+
+    /* C-4 C-4 G-4 F-4.  Deliberately no lower than C-4: that is the bottom
+     * of the ProTracker period table, so the groove exports to .mod without
+     * a single note being transposed. */
+    var bassNotes = [49, 49, 56, 54];
+    var bass = roles.bass || roles.lead || roles.pad;
+
+    /* Give each lane its own channel while there are channels left, then
+     * start doubling up (the patterns interleave, so nothing is lost). */
+    var chan = 0;
+    lanes.forEach(function (lane) {
+      lane.chan = chan % song.channels;
+      chan++;
+    });
+
+    lanes.forEach(function (lane) {
+      for (var r = lane.offset; r < pat.rows; r += lane.every) {
+        var o = TM.cellOffset(pat, r, lane.chan);
+        if (pat.data[o + TM.C_NOTE]) continue; // never overwrite a busier lane
+        pat.data[o + TM.C_NOTE] = lane.note;
+        pat.data[o + TM.C_INST] = lane.inst;
+      }
+    });
+
+    if (bass) {
+      var bchan = chan % song.channels;
+      for (var r = 0; r < pat.rows; r += 4) {
+        var o = TM.cellOffset(pat, r, bchan);
+        if (pat.data[o + TM.C_NOTE]) continue;
+        pat.data[o + TM.C_NOTE] = bassNotes[((r / 4) | 0) % bassNotes.length];
+        pat.data[o + TM.C_INST] = bass;
+      }
+    }
+  };
+
+  /* ---------------------------------------------------------------- *
+   * Structural edits used by the song-properties dialog
+   * ---------------------------------------------------------------- */
+
+  /** True when any cell outside the first `keep` channels holds data. */
+  TM.channelsInUse = function (song, keep) {
+    for (var p = 0; p < song.patterns.length; p++) {
+      var pat = song.patterns[p];
+      for (var r = 0; r < pat.rows; r++) {
+        for (var c = keep; c < pat.channels; c++) {
+          var o = TM.cellOffset(pat, r, c);
+          for (var b = 0; b < TM.CELL_SIZE; b++) if (pat.data[o + b]) return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  /**
+   * Grow or shrink the song's channel count, rewriting every pattern.
+   * Cells in dropped channels are lost; new channels come up empty with
+   * the format's default panning.
+   */
+  TM.setSongChannels = function (song, n) {
+    n = TM.clamp(n | 0, 1, 64);
+    if (n === song.channels) return song;
+    var old = song.channels;
+    song.patterns = song.patterns.map(function (pat) {
+      var next = TM.makePattern(pat.rows, n);
+      next.name = pat.name;
+      var copy = Math.min(old, n) * TM.CELL_SIZE;
+      for (var r = 0; r < pat.rows; r++) {
+        next.data.set(pat.data.subarray(TM.cellOffset(pat, r, 0), TM.cellOffset(pat, r, 0) + copy), TM.cellOffset(next, r, 0));
+      }
+      return next;
+    });
+    for (var c = old; c < n; c++) {
+      song.panning[c] = defaultPanning(song.type, c);
+      song.chanVolume[c] = 64;
+      song.chanMuted[c] = false;
+    }
+    song.panning.length = n;
+    song.chanVolume.length = n;
+    song.chanMuted.length = n;
+    song.channels = n;
+    return song;
+  };
+
+  /**
+   * Append `count` empty patterns of the song's current geometry, and give
+   * each one an order-list entry.  The order entry is not optional: this
+   * program has no order-list editor, so a pattern nothing points at would
+   * be unreachable and the user would have no way to fix that.
+   */
+  TM.addPatterns = function (song, count, rows) {
+    var r = TM.clamp(rows | 0 || (song.patterns[0] ? song.patterns[0].rows : 64), 1, 256);
+    for (var i = 0; i < count; i++) {
+      song.orders.push(song.patterns.length);
+      song.patterns.push(TM.makePattern(r, song.channels));
+    }
+    return song;
   };
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 
@@ -10210,6 +10765,398 @@ input[type="range"] { accent-color: var(--accent); width: 100px; }
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 
 
+/* ===== js/app/dialogs.js ============================================ */
+/* =====================================================================
+ * dialogs.js -- the "new song" wizard and the song-properties editor.
+ *
+ * Both live in the single #modal sheet the rest of the app already uses.
+ * They are kept out of app.js because they are the only screens with real
+ * form state, and because neither one is allowed to touch app internals:
+ * everything they need arrives in an `api` object (showModal, status, and
+ * the two callbacks that adopt the result).  That keeps the "song object
+ * is mutated in exactly one place" rule from app.js intact.
+ *
+ * The wizard is a three step affair rather than one long form because the
+ * three decisions are genuinely sequential - the format caps the channel
+ * count and fixes the pattern length, and the instrument step only makes
+ * sense once you know how many channels the groove has to fill.  State
+ * lives in a plain object; each step re-renders from it, so going back
+ * never loses an answer.
+ * ===================================================================== */
+(function (root) {
+  'use strict';
+  var TM = root.TM;
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+  function val(id, dflt) {
+    var e = $(id);
+    if (!e) return dflt;
+    return e.type === 'checkbox' ? e.checked : e.value;
+  }
+  function num(id, dflt) {
+    var v = parseInt(val(id, ''), 10);
+    return isFinite(v) ? v : dflt;
+  }
+
+  /** <label> row for the two-column dialog forms. */
+  function field(label, control, hint) {
+    return (
+      '<label class="f"><span>' + esc(label) + '</span><span class="c">' + control +
+      (hint ? '<em>' + esc(hint) + '</em>' : '') + '</span></label>'
+    );
+  }
+  function numberInput(id, value, min, max, step) {
+    return (
+      '<input type="number" id="' + id + '" value="' + value + '" min="' + min + '" max="' + max +
+      '" step="' + (step || 1) + '">'
+    );
+  }
+  function options(list, selected) {
+    return list
+      .map(function (o) {
+        return '<option value="' + esc(o[0]) + '"' + (String(o[0]) === String(selected) ? ' selected' : '') + '>' + esc(o[1]) + '</option>';
+      })
+      .join('');
+  }
+
+  /* Enter anywhere in a dialog form triggers its primary action.  The
+   * handler goes on the inputs, not on #modalcontent: that element is
+   * reused by every dialog, so a listener left on it would pile up on the
+   * next render and fire the button twice. */
+  function bindEnter() {
+    var content = $('modalcontent');
+    if (!content) return;
+    var inputs = content.querySelectorAll('input');
+    for (var i = 0; i < inputs.length; i++) {
+      inputs[i].addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        var btns = $('modalactions').querySelectorAll('button');
+        var go = btns[btns.length - 1];
+        if (go) go.click();
+      });
+    }
+  }
+
+  /* ================================================================== *
+   * New song wizard
+   * ================================================================== */
+  var STEPS = ['Format', 'Timing', 'Instruments'];
+
+  function crumbs(step) {
+    return (
+      '<div class="wizsteps">' +
+      STEPS.map(function (s, i) {
+        return '<span class="' + (i === step ? 'on' : i < step ? 'done' : '') + '">' + (i + 1) + '. ' + esc(s) + '</span>';
+      }).join('') +
+      '</div>'
+    );
+  }
+
+  function openNew(api) {
+    /* Defaults chosen so that pressing Enter three times yields something
+     * that plays: a 4 channel MOD with a drum kit and a groove in it. */
+    var w = {
+      step: 0,
+      title: 'Untitled',
+      type: 'mod',
+      channels: 4,
+      rows: 64,
+      patterns: 4,
+      speed: 6,
+      tempo: 125,
+      globalVolume: 128,
+      kit: TM.STARTER_KIT.map(function (k) { return k.id; }),
+      emptySlots: 4,
+      groove: true
+    };
+
+    function fmt() { return TM.FORMATS[w.type]; }
+
+    /* Read whatever the visible step holds back into `w` so Back/Next and
+     * the summary never show stale values. */
+    function collect() {
+      if (w.step === 0) {
+        w.title = String(val('w-title', w.title)).substring(0, 63);
+        w.type = val('w-type', w.type);
+        w.channels = num('w-channels', w.channels);
+        w.rows = num('w-rows', w.rows);
+        w.patterns = num('w-patterns', w.patterns);
+      } else if (w.step === 1) {
+        w.speed = num('w-speed', w.speed);
+        w.tempo = num('w-tempo', w.tempo);
+        w.globalVolume = num('w-gv', w.globalVolume);
+      } else if (w.step === 2) {
+        w.kit = TM.STARTER_KIT.filter(function (k) { return val('w-kit-' + k.id, false); }).map(function (k) { return k.id; });
+        w.emptySlots = num('w-empty', w.emptySlots);
+        w.groove = !!val('w-groove', w.groove);
+      }
+      clampAll();
+    }
+
+    function clampAll() {
+      var f = fmt();
+      w.channels = TM.clamp(w.channels || 4, 1, f.maxChannels);
+      w.rows = f.fixedRows || TM.clamp(w.rows || 64, 1, 256);
+      w.patterns = TM.clamp(w.patterns || 1, 1, 128);
+      w.speed = TM.clamp(w.speed || 6, 1, 31);
+      w.tempo = TM.clamp(w.tempo || 125, 32, 255);
+      w.globalVolume = TM.clamp(isFinite(w.globalVolume) ? w.globalVolume : 128, 0, 128);
+      w.emptySlots = TM.clamp(w.emptySlots || 0, 0, 60);
+    }
+
+    function stepFormat() {
+      var f = fmt();
+      return (
+        crumbs(0) +
+        '<div class="form">' +
+        field('Song title', '<input type="text" id="w-title" maxlength="63" value="' + esc(w.title) + '" placeholder="Untitled">',
+          'MOD files store the first 20 characters.') +
+        field('Format',
+          '<select id="w-type">' +
+            options(Object.keys(TM.FORMATS).map(function (k) { return [k, TM.FORMATS[k].label]; }), w.type) +
+            '</select>', f.note) +
+        field('Channels', numberInput('w-channels', w.channels, 1, f.maxChannels),
+          'Up to ' + f.maxChannels + ' for this format.') +
+        field('Rows per pattern',
+          f.fixedRows
+            ? '<input type="number" id="w-rows" value="' + f.fixedRows + '" disabled>'
+            : numberInput('w-rows', w.rows, 1, 256),
+          f.fixedRows ? 'MOD patterns are always 64 rows.' : '64 rows at 4 rows/beat is one 4-bar phrase.') +
+        field('Patterns', numberInput('w-patterns', w.patterns, 1, 128),
+          'They are placed in the order list as 00, 01, 02 ...') +
+        '</div>'
+      );
+    }
+
+    function stepTiming() {
+      var rowsPerMin = (w.tempo * 24) / w.speed / 60; // rows per second
+      var secs = (w.rows * w.patterns) / rowsPerMin;
+      return (
+        crumbs(1) +
+        '<div class="form">' +
+        field('Speed (ticks/row)', numberInput('w-speed', w.speed, 1, 31), 'Lower is faster. 6 is the tracker default.') +
+        field('Tempo (BPM)', numberInput('w-tempo', w.tempo, 32, 255), '125 BPM at speed 6 = 50 Hz ticks, the Amiga standard.') +
+        field('Global volume', numberInput('w-gv', w.globalVolume, 0, 128), '0-128. Leave headroom if you plan to layer.') +
+        '</div>' +
+        '<p class="hint">At speed ' + w.speed + ' / ' + w.tempo + ' BPM one row lasts ' +
+        (1000 / rowsPerMin).toFixed(0) + ' ms, so ' + w.patterns + ' pattern' + (w.patterns === 1 ? '' : 's') +
+        ' of ' + w.rows + ' rows runs about ' + secs.toFixed(1) + ' s. All of this is editable later.</p>'
+      );
+    }
+
+    function stepInstruments() {
+      var kit = TM.STARTER_KIT.map(function (k) {
+        var on = w.kit.indexOf(k.id) >= 0;
+        return (
+          '<label class="kititem"><input type="checkbox" id="w-kit-' + k.id + '"' + (on ? ' checked' : '') + '>' +
+          '<b>' + esc(k.name) + '</b><em>' + esc(k.hint) + '</em></label>'
+        );
+      }).join('');
+      var total = w.kit.length + w.emptySlots;
+      return (
+        crumbs(2) +
+        '<p class="hint">Generated in the browser at 8363 Hz, the reference rate this app tunes to - so they survive a ' +
+        '.mod export untouched. Tonal waves are a single 16-sample cycle on a loop; drums are one-shots.</p>' +
+        '<div class="kit">' + kit + '</div>' +
+        '<div class="form">' +
+        field('Empty slots', numberInput('w-empty', w.emptySlots, 0, 60), 'Blank sample slots to fill in later.') +
+        field('Starter groove',
+          '<label class="chk"><input type="checkbox" id="w-groove"' + (w.groove ? ' checked' : '') +
+          '><span>Write a beat into pattern 00</span></label>',
+          'Kick, snare, hats and a bass line - something to hear immediately.') +
+        '</div>' +
+        '<p class="hint">Creating <b>' + esc(w.title || 'Untitled') + '</b>: ' + esc(fmt().label) + ', ' +
+        w.channels + ' channel' + (w.channels === 1 ? '' : 's') + ', ' + w.patterns + ' x ' + w.rows + ' rows, ' +
+        total + ' sample slot' + (total === 1 ? '' : 's') + '.</p>'
+      );
+    }
+
+    function render() {
+      clampAll();
+      var body = w.step === 0 ? stepFormat() : w.step === 1 ? stepTiming() : stepInstruments();
+      var actions = [{ label: 'Cancel' }];
+      if (w.step > 0) actions.push({ label: 'Back', keepOpen: true, onClick: function () { collect(); w.step--; render(); } });
+      if (w.step < STEPS.length - 1) {
+        actions.push({ label: 'Next', primary: true, keepOpen: true, onClick: function () { collect(); w.step++; render(); } });
+      } else {
+        actions.push({ label: 'Create song', primary: true, onClick: function () { collect(); finish(); } });
+      }
+      api.showModal('New song - step ' + (w.step + 1) + ' of ' + STEPS.length, body, actions);
+      wire();
+    }
+
+    /* Live rewiring: the format select changes the limits shown on the same
+     * step, and the timing step recomputes its length estimate as you type. */
+    function wire() {
+      var t = $('w-type');
+      if (t) {
+        t.addEventListener('change', function () {
+          collect();
+          var f = fmt();
+          if (w.channels > f.maxChannels) w.channels = f.maxChannels;
+          render();
+        });
+      }
+      ['w-speed', 'w-tempo', 'w-patterns'].forEach(function (id) {
+        var e = $(id);
+        if (e && w.step === 1) e.addEventListener('change', function () { collect(); render(); });
+      });
+      var first = $('w-title') || $('w-speed') || $('w-empty');
+      if (first) setTimeout(function () { first.focus(); if (first.select) first.select(); }, 30);
+      bindEnter();
+    }
+
+    function finish() {
+      var song;
+      try {
+        song = TM.createSong(w);
+      } catch (e) {
+        api.status('Could not create the song: ' + e.message, true);
+        return;
+      }
+      /* Filename from the title: punctuation collapses to a single "_" and
+       * is trimmed off the ends, so "Bass Test 9!" saves as "Bass Test 9",
+       * not "Bass Test 9_". */
+      var name =
+        (w.title || 'untitled')
+          .replace(/[^\w\-. ]+/g, '_')
+          .replace(/_+/g, '_')
+          .replace(/^[_ .]+|[_ .]+$/g, '')
+          .substring(0, 40) || 'untitled';
+      api.onCreate(song, name + '.' + w.type);
+    }
+
+    render();
+  }
+
+  /* ================================================================== *
+   * Song properties (metadata) editor
+   * ================================================================== */
+  function openMetadata(api) {
+    var song = api.song;
+    if (!song) return;
+    var fmt = TM.FORMATS[song.type] || TM.FORMATS.mod;
+    var maxCh = Math.max(fmt.maxChannels, song.channels);
+
+    function body() {
+      return (
+        '<div class="form">' +
+        field('Title', '<input type="text" id="m-title" maxlength="63" value="' + esc(song.title) + '">',
+          'The .mod exporter keeps the first 20 characters.') +
+        field('Tracker', '<input type="text" id="m-tracker" value="' + esc(song.tracker || '') + '">',
+          'Free text - shown next to the format in the status bar.') +
+        field('Message', '<textarea id="m-message" rows="3" placeholder="Liner notes, greets, credits...">' +
+          esc(song.message || '') + '</textarea>', 'Stored by XM and IT; ignored by MOD and S3M.') +
+        '</div>' +
+        '<h4>Playback</h4>' +
+        '<div class="form">' +
+        field('Initial speed', numberInput('m-speed', song.initialSpeed, 1, 31), 'Ticks per row.') +
+        field('Initial tempo', numberInput('m-tempo', song.initialTempo, 32, 255), 'BPM.') +
+        field('Global volume', numberInput('m-gv', song.globalVolume, 0, 128), '0-128.') +
+        field('Mix volume', numberInput('m-mix', song.mixVolume, 0, 128), 'Pre-amp: lower it if loud songs clip.') +
+        field('Restart position', numberInput('m-restart', song.restartPos, 0, Math.max(0, song.orders.length - 1)),
+          'Order the song loops back to.') +
+        field('Linear slides',
+          '<label class="chk"><input type="checkbox" id="m-linear"' + (song.flags.linearSlides ? ' checked' : '') +
+          '><span>Linear frequency slides</span></label>',
+          'On for XM/IT, off for the Amiga-period formats.') +
+        field('Amiga limits',
+          '<label class="chk"><input type="checkbox" id="m-amiga"' + (song.flags.amigaLimits ? ' checked' : '') +
+          '><span>Clamp periods to the Amiga range</span></label>',
+          'Stops portamentos running off the top of the Paula range.') +
+        '</div>' +
+        '<h4>Structure</h4>' +
+        '<div class="form">' +
+        field('Channels', numberInput('m-channels', song.channels, 1, maxCh),
+          'Adding channels appends empty ones; removing them discards their notes.') +
+        field('Add patterns', numberInput('m-addpat', 0, 0, Math.max(0, 128 - song.patterns.length)),
+          'Appends blank patterns to the end, each with its own order entry. Patterns are never removed here.') +
+        '</div>' +
+        '<p class="hint">Format: ' + esc(song.typeName) + ' &middot; ' + song.patterns.length + ' pattern' +
+        (song.patterns.length === 1 ? '' : 's') + ' &middot; ' + song.orders.length + ' order' +
+        (song.orders.length === 1 ? '' : 's') + ' &middot; ' + song.samples.length + ' sample' +
+        (song.samples.length === 1 ? '' : 's') +
+        '. Metadata changes are not covered by pattern undo.</p>'
+      );
+    }
+
+    function show() {
+      api.showModal('Song properties', body(), [
+        { label: 'Cancel' },
+        { label: 'Apply', primary: true, keepOpen: true, onClick: apply }
+      ]);
+      bindEnter();
+      setTimeout(function () { var e = $('m-title'); if (e) { e.focus(); e.select(); } }, 30);
+    }
+
+    function apply() {
+      var next = {
+        title: String(val('m-title', song.title)).substring(0, 63),
+        tracker: String(val('m-tracker', song.tracker || '')).substring(0, 63),
+        message: String(val('m-message', song.message || '')),
+        speed: TM.clamp(num('m-speed', song.initialSpeed), 1, 31),
+        tempo: TM.clamp(num('m-tempo', song.initialTempo), 32, 255),
+        gv: TM.clamp(num('m-gv', song.globalVolume), 0, 128),
+        mix: TM.clamp(num('m-mix', song.mixVolume), 0, 128),
+        restart: TM.clamp(num('m-restart', song.restartPos), 0, Math.max(0, song.orders.length - 1)),
+        linear: !!val('m-linear', song.flags.linearSlides),
+        amiga: !!val('m-amiga', song.flags.amigaLimits),
+        channels: TM.clamp(num('m-channels', song.channels), 1, maxCh),
+        addPat: TM.clamp(num('m-addpat', 0), 0, Math.max(0, 128 - song.patterns.length))
+      };
+
+      /* Dropping channels is the one destructive edit in this dialog and
+       * pattern undo does not cover it, so ask first - but only when there
+       * is actually something in the channels about to disappear. */
+      if (next.channels < song.channels && TM.channelsInUse(song, next.channels)) {
+        api.showModal(
+          'Remove ' + (song.channels - next.channels) + ' channel' + (song.channels - next.channels === 1 ? '' : 's') + '?',
+          '<p>Channels ' + (next.channels + 1) + '-' + song.channels + ' contain notes. Removing them deletes that ' +
+            'data from every pattern, and this cannot be undone.</p>' +
+            '<p class="hint">Export a .mod first if you want a copy of the current arrangement.</p>',
+          [
+            { label: 'Back', keepOpen: true, onClick: show },
+            { label: 'Remove them', primary: true, onClick: function () { commit(next); } }
+          ]
+        );
+        return;
+      }
+      commit(next);
+      api.hideModal();
+    }
+
+    function commit(next) {
+      var channelsChanged = next.channels !== song.channels;
+      song.title = next.title;
+      song.tracker = next.tracker;
+      song.message = next.message;
+      song.initialSpeed = next.speed;
+      song.initialTempo = next.tempo;
+      song.globalVolume = next.gv;
+      song.mixVolume = next.mix;
+      song.restartPos = next.restart;
+      song.flags.linearSlides = next.linear;
+      song.flags.amigaLimits = next.amiga;
+      // Channels first: addPatterns() builds at the song's current width, so
+      // patterns appended after the resize come out the right shape.
+      if (channelsChanged) TM.setSongChannels(song, next.channels);
+      if (next.addPat) TM.addPatterns(song, next.addPat);
+      api.onApply({ channelsChanged: channelsChanged, patternsAdded: next.addPat });
+    }
+
+    show();
+  }
+
+  root.SongDialogs = { openNew: openNew, openMetadata: openMetadata };
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+
 /* ===== js/app/app.js ================================================ */
 /* =====================================================================
  * app.js -- the UI controller.
@@ -10229,6 +11176,16 @@ input[type="range"] { accent-color: var(--accent); width: 100px; }
 (function (root) {
   'use strict';
   var TM = root.TM;
+
+  /* Project home.  The toolbar wordmark in the HTML points here too - keep
+   * the two in step if the repository ever moves. */
+  var REPO_URL = 'https://github.com/g023/nybbletide_tracker';
+
+  /* External links always open in a new tab: the editor holds unsaved song
+   * state, and rel=noopener keeps the opened page off our window object. */
+  function link(href, text) {
+    return '<a href="' + href + '" target="_blank" rel="noopener noreferrer">' + text + '</a>';
+  }
 
   var app = {
     song: null,
@@ -10343,6 +11300,14 @@ input[type="range"] { accent-color: var(--accent); width: 100px; }
       status(e.message, true);
       return false;
     }
+    adoptSong(song, name);
+    status('Loaded ' + name + ' - ' + song.typeName);
+    return true;
+  }
+
+  /* Everything that has to happen when a different song becomes the one on
+   * screen, whether it came off disk or out of the new-song wizard. */
+  function adoptSong(song, name) {
     app.song = song;
     app.filename = name;
     app.archiveName = '';
@@ -10370,9 +11335,7 @@ input[type="range"] { accent-color: var(--accent); width: 100px; }
     selectInstrument(firstUsefulInstrument(song));
     updateInfo();
     updateTransport();
-    status('Loaded ' + name + ' - ' + song.typeName);
     if ($('autoplay').checked) app.engine.play();
-    return true;
   }
 
   function firstPattern(song) {
@@ -10811,7 +11774,7 @@ input[type="range"] { accent-color: var(--accent); width: 100px; }
   /* ------------------------------------------------------- transport */
   function updateTransport() {
     var has = !!app.song;
-    ['play', 'pause', 'stop', 'savemod', 'savewav'].forEach(function (id) { $(id).disabled = !has; });
+    ['play', 'pause', 'stop', 'savemod', 'savewav', 'songprops'].forEach(function (id) { $(id).disabled = !has; });
   }
 
   function play() { app.engine.play(); }
@@ -10927,6 +11890,94 @@ input[type="range"] { accent-color: var(--accent); width: 100px; }
     });
   }
 
+  /* ------------------------------------------- new song / properties */
+
+  /* The wizard and the properties sheet get a tiny surface of the app:
+   * the modal helpers, the status line, and one callback each.  They never
+   * see app.song directly except to read it, so the "one place mutates the
+   * song" rule survives. */
+  function dialogApi(extra) {
+    var base = {
+      showModal: showModal,
+      hideModal: hideModal,
+      status: status,
+      song: app.song
+    };
+    for (var k in extra) if (Object.prototype.hasOwnProperty.call(extra, k)) base[k] = extra[k];
+    return base;
+  }
+
+  function newSong() {
+    var run = function () {
+      root.SongDialogs.openNew(
+        dialogApi({
+          onCreate: function (song, name) {
+            adoptSong(song, name);
+            status('Created ' + (song.title || 'untitled') + ' - ' + song.typeName + ', ' + song.channels + ' channels');
+          }
+        })
+      );
+    };
+    /* Anything already open is the user's work; ask before replacing it. */
+    if (app.song && app.undoStack.length) {
+      showModal(
+        'Start a new song?',
+        '<p>This replaces <b>' + escapeHtml(app.song.title || app.filename || 'the current song') +
+          '</b> and the edits you have made to it.</p>' +
+          '<p class="hint">Export a .mod first if you want to keep it.</p>',
+        [{ label: 'Cancel' }, { label: 'New song', primary: true, onClick: run }]
+      );
+      return;
+    }
+    run();
+  }
+
+  function songProperties() {
+    if (!app.song) { status('Load or create a song first', true); return; }
+    root.SongDialogs.openMetadata(
+      dialogApi({
+        onApply: function (res) {
+          var st = app.playState;
+          var wasPlaying = !!(st && st.playing);
+          var order = st ? st.order : 0;
+          var row = st ? st.row : 0;
+
+          if (res.channelsChanged) {
+            app.mutes.length = app.song.channels;
+            app.solos.length = app.song.channels;
+            for (var i = 0; i < app.song.channels; i++) {
+              app.mutes[i] = !!app.mutes[i];
+              app.solos[i] = !!app.solos[i];
+            }
+            app.grid.setSong(app.song);
+            buildChannels();
+          }
+          // New patterns each brought an order entry with them.
+          if (res.patternsAdded) {
+            app.grid.setSong(app.song);
+            buildOrderList();
+          }
+
+          // Speed, tempo, global volume and the flags are all read when the
+          // engine takes the song, so the whole thing has to go back over.
+          app.engine.loadSong(app.song);
+          app.engine.setMutes(app.mutes);
+          app.engine.setSolos(app.solos);
+          if (wasPlaying) {
+            app.engine.setPosition(Math.min(order, app.song.orders.length - 1), row);
+            app.engine.play();
+          }
+
+          document.title = (app.song.title || app.filename) + ' - Nybbletide';
+          app.grid.dirty = true;
+          updateInfo();
+          refreshChannelButtons();
+          status('Song properties updated');
+        }
+      })
+    );
+  }
+
   /* ------------------------------------------------------- main loop */
   function frame() {
     if (app.viz && app.engine.ctx) app.viz.draw(app.engine.ctx.sampleRate);
@@ -10993,6 +12044,8 @@ input[type="range"] { accent-color: var(--accent); width: 100px; }
         if (e.code === 'KeyZ' && !e.shiftKey) { e.preventDefault(); undo(); }
         else if (e.code === 'KeyY' || (e.code === 'KeyZ' && e.shiftKey)) { e.preventDefault(); redo(); }
         else if (e.code === 'KeyO') { e.preventDefault(); $('fileinput').click(); }
+        else if (e.code === 'KeyN') { e.preventDefault(); newSong(); }
+        else if (e.code === 'KeyP') { e.preventDefault(); songProperties(); }
         else if (e.code === 'KeyS') { e.preventDefault(); saveMOD(); }
         return;
       }
@@ -11005,6 +12058,9 @@ input[type="range"] { accent-color: var(--accent); width: 100px; }
       else if (e.code === 'F8') { e.preventDefault(); stop(); }
       else if (e.code === 'F1') { e.preventDefault(); showHelp(); }
       else if (e.code === 'KeyL' && e.altKey) { e.preventDefault(); $('loop').click(); }
+      // Alt duplicates of the Ctrl shortcuts the browser refuses to release.
+      else if (e.code === 'KeyN' && e.altKey) { e.preventDefault(); newSong(); }
+      else if (e.code === 'KeyP' && e.altKey) { e.preventDefault(); songProperties(); }
     });
   }
 
@@ -11015,6 +12071,8 @@ input[type="range"] { accent-color: var(--accent); width: 100px; }
         [
           ['<kbd>Space</kbd>', 'Play / pause'],
           ['<kbd>F5</kbd> / <kbd>F6</kbd> / <kbd>F8</kbd>', 'Play, pause, stop'],
+          ['<kbd>Ctrl</kbd>+<kbd>N</kbd> or <kbd>Alt</kbd>+<kbd>N</kbd>', 'New song wizard'],
+          ['<kbd>Ctrl</kbd>+<kbd>P</kbd> or <kbd>Alt</kbd>+<kbd>P</kbd>', 'Song properties (title, tempo, channels)'],
           ['<kbd>Ctrl</kbd>+<kbd>O</kbd>', 'Open a module'],
           ['<kbd>Ctrl</kbd>+<kbd>S</kbd>', 'Save as .mod'],
           ['<kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd>', 'Undo / redo pattern edits'],
@@ -11040,7 +12098,14 @@ input[type="range"] { accent-color: var(--accent); width: 100px; }
         'Archives are unpacked in the browser too: <code>.zip</code>, <code>.arj</code>, ' +
         '<code>.lha</code>/<code>.lzh</code>, <code>.tar</code>, <code>.gz</code> and ' +
         '<code>.tar.gz</code> - drop one in and pick the module you want. ' +
-        'Everything runs locally in your browser - no file ever leaves this machine.</p>',
+        'Everything runs locally in your browser - no file ever leaves this machine.</p>' +
+        '<p class="credits">Nybbletide by <b>g023</b> - MIT licensed.<br>' +
+        link(REPO_URL, 'github.com/g023/nybbletide_tracker') +
+        '<span class="dotsep">&middot;</span>' +
+        link('https://github.com/g023', 'github.com/g023') +
+        '<span class="dotsep">&middot;</span>' +
+        link('https://x.com/g023dev', 'x.com/g023dev') +
+        '</p>',
       [{ label: 'Got it', primary: true }]
     );
   }
@@ -11114,6 +12179,8 @@ input[type="range"] { accent-color: var(--accent); width: 100px; }
       });
 
     // ---- file intake ---------------------------------------------
+    $('newbtn').addEventListener('click', newSong);
+    $('songprops').addEventListener('click', songProperties);
     $('openbtn').addEventListener('click', function () { $('fileinput').click(); });
     $('urlbtn').addEventListener('click', showOpenUrl);
     $('fileinput').addEventListener('change', function (e) {

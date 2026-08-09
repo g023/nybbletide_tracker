@@ -31,6 +31,7 @@ var SRC = path.join(ROOT, 'src');
  * everything. */
 var MAIN_BUNDLE = [
   'js/core/common.js',
+  'js/core/songfactory.js',
   'js/formats/mod.js',
   'js/formats/s3m.js',
   'js/formats/xm.js',
@@ -43,6 +44,7 @@ var MAIN_BUNDLE = [
   'js/app/audio.js',
   'js/app/patterngrid.js',
   'js/app/visualizer.js',
+  'js/app/dialogs.js',
   'js/app/app.js'
 ];
 

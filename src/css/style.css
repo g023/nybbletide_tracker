@@ -125,7 +125,18 @@ body {
   font-size: 15px;
   margin-right: 4px;
   user-select: none;
+  /* It is an <a> to the repository, but it must still read as the wordmark. */
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius);
+  padding: 2px 4px;
+  margin-left: -4px;
+  transition: background 0.15s, opacity 0.15s;
 }
+.brand:hover { background: var(--accent-soft); }
+.brand:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.brand .logo { transition: transform 0.15s; }
+.brand:hover .logo { transform: scale(1.15); }
 .brand .dot {
   width: 10px; height: 10px; border-radius: 50%;
   background: var(--accent);
@@ -137,6 +148,15 @@ body {
 .brand .name b { color: var(--accent); font-weight: 700; }
 
 .spacer { flex: 1 1 auto; }
+/* The toolbars group controls with <span class="sep"></span>; without a rule
+   an empty inline span collapses to nothing and the groups run together. */
+.bar .sep {
+  align-self: stretch;
+  width: 1px;
+  min-height: 18px;
+  background: var(--border);
+  margin: 0 2px;
+}
 
 button, .btn {
   font: inherit;
@@ -492,6 +512,18 @@ input[type="range"] { accent-color: var(--accent); width: 100px; }
   padding: 1px 5px;
   font-size: 11px;
 }
+#modal .content a { color: var(--accent); text-decoration: none; }
+#modal .content a:hover { text-decoration: underline; }
+/* Credits strip at the foot of the help sheet. */
+#modal .credits {
+  margin: 14px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--fg-dim);
+}
+#modal .credits .dotsep { margin: 0 6px; opacity: 0.5; }
+
 #modal .actions { padding: 12px 18px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
 #modal table { width: 100%; border-collapse: collapse; font-size: 12px; }
 #modal td { padding: 3px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
@@ -508,6 +540,93 @@ input[type="range"] { accent-color: var(--accent); width: 100px; }
 #modal .arclist .arcname { word-break: break-all; font-family: var(--mono, monospace); }
 #modal .arclist .arcsize,
 #modal .arclist .arcmethod { width: 1%; white-space: nowrap; text-align: right; color: var(--fg-faint); }
+
+/* Dialog forms: the wizard and the song-properties sheet.  One label per
+ * row with a fixed-width caption keeps the two dialogs visually identical
+ * even though their fields have nothing in common. */
+#modal .form { display: flex; flex-direction: column; gap: 9px; margin: 10px 0 4px; }
+#modal .form .f {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  color: var(--fg);
+}
+#modal .form .f > span:first-child {
+  flex: 0 0 130px;
+  color: var(--fg-dim);
+  font-weight: 600;
+  text-align: right;
+}
+#modal .form .f > .c { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+#modal .form .f em { font-style: normal; color: var(--fg-faint); font-size: 11px; }
+#modal .form input[type="text"],
+#modal .form input[type="number"],
+#modal .form select,
+#modal .form textarea { width: 100%; }
+#modal .form input[type="number"] { max-width: 130px; }
+#modal .form input:disabled { opacity: 0.5; }
+#modal textarea {
+  font: inherit;
+  color: var(--fg);
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 5px 6px;
+  resize: vertical;
+}
+#modal .chk { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+#modal .chk input { accent-color: var(--accent); }
+#modal h4 {
+  margin: 16px 0 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-faint);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+}
+
+/* Wizard step breadcrumb: three states, no interaction - the Back and
+ * Next buttons stay the only way to move, so nothing here is clickable. */
+.wizsteps { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.wizsteps span {
+  flex: 1 1 0;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 5px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-sunken);
+  color: var(--fg-faint);
+  white-space: nowrap;
+}
+.wizsteps span.on { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.wizsteps span.done { color: var(--accent); border-color: var(--accent); }
+
+/* Starter-kit picker: a two column checklist of the generated samples. */
+.kit { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 6px; margin: 10px 0; }
+.kititem {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 8px;
+  align-items: center;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-sunken);
+  cursor: pointer;
+  font-size: 12px;
+}
+.kititem:hover { border-color: var(--accent); }
+.kititem input { accent-color: var(--accent); grid-row: span 2; }
+.kititem b { font-weight: 600; }
+.kititem em { font-style: normal; color: var(--fg-faint); font-size: 11px; }
 
 /* --------------------------------------------------------- helpers */
 .hint { color: var(--fg-faint); font-size: 11px; }

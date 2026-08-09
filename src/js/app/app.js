@@ -17,6 +17,16 @@
   'use strict';
   var TM = root.TM;
 
+  /* Project home.  The toolbar wordmark in the HTML points here too - keep
+   * the two in step if the repository ever moves. */
+  var REPO_URL = 'https://github.com/g023/nybbletide_tracker';
+
+  /* External links always open in a new tab: the editor holds unsaved song
+   * state, and rel=noopener keeps the opened page off our window object. */
+  function link(href, text) {
+    return '<a href="' + href + '" target="_blank" rel="noopener noreferrer">' + text + '</a>';
+  }
+
   var app = {
     song: null,
     engine: null,
@@ -130,6 +140,14 @@
       status(e.message, true);
       return false;
     }
+    adoptSong(song, name);
+    status('Loaded ' + name + ' - ' + song.typeName);
+    return true;
+  }
+
+  /* Everything that has to happen when a different song becomes the one on
+   * screen, whether it came off disk or out of the new-song wizard. */
+  function adoptSong(song, name) {
     app.song = song;
     app.filename = name;
     app.archiveName = '';
@@ -157,9 +175,7 @@
     selectInstrument(firstUsefulInstrument(song));
     updateInfo();
     updateTransport();
-    status('Loaded ' + name + ' - ' + song.typeName);
     if ($('autoplay').checked) app.engine.play();
-    return true;
   }
 
   function firstPattern(song) {
@@ -598,7 +614,7 @@
   /* ------------------------------------------------------- transport */
   function updateTransport() {
     var has = !!app.song;
-    ['play', 'pause', 'stop', 'savemod', 'savewav'].forEach(function (id) { $(id).disabled = !has; });
+    ['play', 'pause', 'stop', 'savemod', 'savewav', 'songprops'].forEach(function (id) { $(id).disabled = !has; });
   }
 
   function play() { app.engine.play(); }
@@ -714,6 +730,94 @@
     });
   }
 
+  /* ------------------------------------------- new song / properties */
+
+  /* The wizard and the properties sheet get a tiny surface of the app:
+   * the modal helpers, the status line, and one callback each.  They never
+   * see app.song directly except to read it, so the "one place mutates the
+   * song" rule survives. */
+  function dialogApi(extra) {
+    var base = {
+      showModal: showModal,
+      hideModal: hideModal,
+      status: status,
+      song: app.song
+    };
+    for (var k in extra) if (Object.prototype.hasOwnProperty.call(extra, k)) base[k] = extra[k];
+    return base;
+  }
+
+  function newSong() {
+    var run = function () {
+      root.SongDialogs.openNew(
+        dialogApi({
+          onCreate: function (song, name) {
+            adoptSong(song, name);
+            status('Created ' + (song.title || 'untitled') + ' - ' + song.typeName + ', ' + song.channels + ' channels');
+          }
+        })
+      );
+    };
+    /* Anything already open is the user's work; ask before replacing it. */
+    if (app.song && app.undoStack.length) {
+      showModal(
+        'Start a new song?',
+        '<p>This replaces <b>' + escapeHtml(app.song.title || app.filename || 'the current song') +
+          '</b> and the edits you have made to it.</p>' +
+          '<p class="hint">Export a .mod first if you want to keep it.</p>',
+        [{ label: 'Cancel' }, { label: 'New song', primary: true, onClick: run }]
+      );
+      return;
+    }
+    run();
+  }
+
+  function songProperties() {
+    if (!app.song) { status('Load or create a song first', true); return; }
+    root.SongDialogs.openMetadata(
+      dialogApi({
+        onApply: function (res) {
+          var st = app.playState;
+          var wasPlaying = !!(st && st.playing);
+          var order = st ? st.order : 0;
+          var row = st ? st.row : 0;
+
+          if (res.channelsChanged) {
+            app.mutes.length = app.song.channels;
+            app.solos.length = app.song.channels;
+            for (var i = 0; i < app.song.channels; i++) {
+              app.mutes[i] = !!app.mutes[i];
+              app.solos[i] = !!app.solos[i];
+            }
+            app.grid.setSong(app.song);
+            buildChannels();
+          }
+          // New patterns each brought an order entry with them.
+          if (res.patternsAdded) {
+            app.grid.setSong(app.song);
+            buildOrderList();
+          }
+
+          // Speed, tempo, global volume and the flags are all read when the
+          // engine takes the song, so the whole thing has to go back over.
+          app.engine.loadSong(app.song);
+          app.engine.setMutes(app.mutes);
+          app.engine.setSolos(app.solos);
+          if (wasPlaying) {
+            app.engine.setPosition(Math.min(order, app.song.orders.length - 1), row);
+            app.engine.play();
+          }
+
+          document.title = (app.song.title || app.filename) + ' - Nybbletide';
+          app.grid.dirty = true;
+          updateInfo();
+          refreshChannelButtons();
+          status('Song properties updated');
+        }
+      })
+    );
+  }
+
   /* ------------------------------------------------------- main loop */
   function frame() {
     if (app.viz && app.engine.ctx) app.viz.draw(app.engine.ctx.sampleRate);
@@ -780,6 +884,8 @@
         if (e.code === 'KeyZ' && !e.shiftKey) { e.preventDefault(); undo(); }
         else if (e.code === 'KeyY' || (e.code === 'KeyZ' && e.shiftKey)) { e.preventDefault(); redo(); }
         else if (e.code === 'KeyO') { e.preventDefault(); $('fileinput').click(); }
+        else if (e.code === 'KeyN') { e.preventDefault(); newSong(); }
+        else if (e.code === 'KeyP') { e.preventDefault(); songProperties(); }
         else if (e.code === 'KeyS') { e.preventDefault(); saveMOD(); }
         return;
       }
@@ -792,6 +898,9 @@
       else if (e.code === 'F8') { e.preventDefault(); stop(); }
       else if (e.code === 'F1') { e.preventDefault(); showHelp(); }
       else if (e.code === 'KeyL' && e.altKey) { e.preventDefault(); $('loop').click(); }
+      // Alt duplicates of the Ctrl shortcuts the browser refuses to release.
+      else if (e.code === 'KeyN' && e.altKey) { e.preventDefault(); newSong(); }
+      else if (e.code === 'KeyP' && e.altKey) { e.preventDefault(); songProperties(); }
     });
   }
 
@@ -802,6 +911,8 @@
         [
           ['<kbd>Space</kbd>', 'Play / pause'],
           ['<kbd>F5</kbd> / <kbd>F6</kbd> / <kbd>F8</kbd>', 'Play, pause, stop'],
+          ['<kbd>Ctrl</kbd>+<kbd>N</kbd> or <kbd>Alt</kbd>+<kbd>N</kbd>', 'New song wizard'],
+          ['<kbd>Ctrl</kbd>+<kbd>P</kbd> or <kbd>Alt</kbd>+<kbd>P</kbd>', 'Song properties (title, tempo, channels)'],
           ['<kbd>Ctrl</kbd>+<kbd>O</kbd>', 'Open a module'],
           ['<kbd>Ctrl</kbd>+<kbd>S</kbd>', 'Save as .mod'],
           ['<kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd>', 'Undo / redo pattern edits'],
@@ -827,7 +938,14 @@
         'Archives are unpacked in the browser too: <code>.zip</code>, <code>.arj</code>, ' +
         '<code>.lha</code>/<code>.lzh</code>, <code>.tar</code>, <code>.gz</code> and ' +
         '<code>.tar.gz</code> - drop one in and pick the module you want. ' +
-        'Everything runs locally in your browser - no file ever leaves this machine.</p>',
+        'Everything runs locally in your browser - no file ever leaves this machine.</p>' +
+        '<p class="credits">Nybbletide by <b>g023</b> - MIT licensed.<br>' +
+        link(REPO_URL, 'github.com/g023/nybbletide_tracker') +
+        '<span class="dotsep">&middot;</span>' +
+        link('https://github.com/g023', 'github.com/g023') +
+        '<span class="dotsep">&middot;</span>' +
+        link('https://x.com/g023dev', 'x.com/g023dev') +
+        '</p>',
       [{ label: 'Got it', primary: true }]
     );
   }
@@ -901,6 +1019,8 @@
       });
 
     // ---- file intake ---------------------------------------------
+    $('newbtn').addEventListener('click', newSong);
+    $('songprops').addEventListener('click', songProperties);
     $('openbtn').addEventListener('click', function () { $('fileinput').click(); });
     $('urlbtn').addEventListener('click', showOpenUrl);
     $('fileinput').addEventListener('change', function (e) {

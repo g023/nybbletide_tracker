@@ -31,6 +31,8 @@ By **g023** — [github.com/g023](https://github.com/g023) · [x.com/g023dev](ht
 - [Format support](#format-support)
 - [Opening archives](#opening-archives)
 - [The interface](#the-interface)
+- [Starting a new song](#starting-a-new-song)
+- [Song properties](#song-properties)
 - [Editing patterns](#editing-patterns)
 - [Keyboard reference](#keyboard-reference)
 - [Exporting](#exporting)
@@ -66,6 +68,8 @@ By **g023** — [github.com/g023](https://github.com/g023) · [x.com/g023dev](ht
 
 **As an editor**
 
+- **Start a song from nothing** — a three-step wizard picks the format, the timing and the instruments, generates a playable sample kit in the browser, and can write a starter groove into the first pattern so there is something to hear the moment it opens.
+- **Edit the metadata of any song**, loaded or created: title, tracker name, embedded message, initial speed and tempo, global and mix volume, restart position, the linear-slide and Amiga-limit flags, and the channel count.
 - A full pattern grid: note, instrument, volume-column and effect fields, all clickable and typeable.
 - Tracker-standard piano-key entry over two octaves, with a selectable base octave and edit step.
 - Undo / redo (200 levels) for every pattern mutation.
@@ -142,7 +146,7 @@ The whole implementation lives in `src/js/formats/archive.js` (~700 lines): a ra
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ toolbar   Open · URL · Save .mod · Export .wav        Interp Stereo Vol ? ☾  │
+│ toolbar  New · Open · URL · Song… · Save .mod · Export .wav  Interp Stereo Vol ? ☾ │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │ transport ▶ ⏸ ■ ↻ · Follow · Edit · Unmute all · Oct · Step · Autoplay │ ord/pat/row/spd/bpm/voi/time │
 ├───────────────┬──────────────────────────────────────┬───────────────────────┤
@@ -167,6 +171,57 @@ The whole implementation lives in `src/js/formats/archive.js` (~700 lines): a ra
 - **Status bar** — module metadata on the left, transient messages in the middle, and on the right whether you got the **AudioWorklet** or the **ScriptProcessor** fallback, plus the actual device sample rate.
 
 **Themes.** ☾ / ☀ in the toolbar toggles light and dark. The choice is stored in `localStorage`; with no stored choice the page follows your OS `prefers-color-scheme`. Canvas colours are re-read from the CSS custom properties on every switch, so the grid, waveform and scopes re-theme too.
+
+---
+
+## Starting a new song
+
+You do not need a module to begin. **New…** in the toolbar (<kbd>Ctrl</kbd>+<kbd>N</kbd>, or <kbd>Alt</kbd>+<kbd>N</kbd> where the browser keeps Ctrl+N for itself) opens a three-step wizard. If you already have unsaved edits it asks before replacing them.
+
+**Step 1 — Format.** Song title, target format, channel count, rows per pattern and how many patterns to create. The format drives the rest of the form live: pick MOD and the row count locks to 64 and the channel ceiling drops, pick IT and you may go up to 64 channels. Out-of-range numbers are clamped rather than rejected, so you can never get stuck on a validation error.
+
+**Step 2 — Timing.** Initial speed (ticks per row), tempo (BPM) and global volume, with a running estimate underneath: how long one row lasts in milliseconds and roughly how long the whole song will run. The defaults — speed 6 at 125 BPM — are the Amiga-standard 50 Hz tick.
+
+**Step 3 — Instruments.** A checkbox card per starter instrument, plus the number of blank slots to leave for your own samples and a switch for the starter groove.
+
+The seven starter instruments are **synthesised in the page**, not embedded as data:
+
+| | | |
+|---|---|---|
+| Sine Lead | Square Lead | pure and hollow chip leads |
+| Saw Bass | Triangle | the classic buzzy bass, and a soft pad to sit under it |
+| Kick | Snare · Hi-Hat | a sine-sweep drum, and noise-based percussion |
+
+The tonal waves are a single 16-sample cycle on a forward loop; the drums are one-shots built from a seeded pseudo-random generator, so two runs produce byte-identical samples and your `.wav` and `.mod` exports are reproducible. Everything is generated at **8363 Hz**, the reference rate this program tunes C-5 to, which means a new song exports to `.mod` with no resampling, no finetune fudging and not one warning from the exporter.
+
+With **Starter groove** on, pattern 00 gets a kick on every 4th row, a snare on the backbeat, hats on the offbeat and a four-note bass line — deliberately written no lower than C-4, the bottom of the ProTracker period table, so the groove survives a `.mod` export untransposed. Press **Create song** and it loads exactly as a dropped file would: the grid, order list, channel strip and instrument list all rebuild, and with **Autoplay** on it starts playing.
+
+Pressing <kbd>Enter</kbd> on any step advances it, so three Enters give you a playable 4-channel MOD. **Back** never loses an answer — each step re-renders from the same state object.
+
+---
+
+## Song properties
+
+**Song…** in the toolbar (<kbd>Ctrl</kbd>+<kbd>P</kbd> / <kbd>Alt</kbd>+<kbd>P</kbd>) edits the metadata of **whatever song is loaded**, whether it came from disk, from an archive, from a URL or out of the wizard.
+
+| Field | Notes |
+|---|---|
+| Title | The `.mod` exporter keeps the first 20 characters |
+| Tracker | Free text, shown beside the format in the status bar |
+| Message | Multi-line liner notes; stored by XM and IT, ignored by MOD and S3M |
+| Initial speed / tempo | Ticks per row (1–31) and BPM (32–255) |
+| Global volume / mix volume | 0–128 each; drop the mix volume if a loud song clips |
+| Restart position | The order the song loops back to |
+| Linear slides | On for XM/IT, off for the Amiga-period formats |
+| Amiga limits | Clamps periods to the Paula range |
+| Channels | Adding appends empty channels; removing discards their notes |
+| Add patterns | Appends blank patterns to the end of the song, each with its own order entry |
+
+Speed, tempo, volumes and the flags are only read when the replay engine takes a song, so applying changes hands the whole song back to the audio thread. The dialog saves and restores the playing position and mute/solo state around that, so a change you make while the song is playing does not stop it.
+
+**Add patterns** exists because there is no order-list editor: each appended pattern automatically gets an order entry, so it is reachable the moment you close the dialog. Patterns are only ever added here, never removed.
+
+**Changing the channel count** is the one destructive edit here, and pattern undo does not cover it: shrinking rewrites every pattern. So the dialog checks whether the channels about to disappear actually contain notes, and only then asks for confirmation. Cutting empty channels applies immediately without nagging. Growing is always safe — new channels arrive blank, with sensible default panning for the format.
 
 ---
 
@@ -197,7 +252,9 @@ Every edit is snapshotted, so <kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kb
 |---|---|
 | <kbd>Space</kbd> | Play / pause (note-cut when the cursor is in the note column and Edit is on) |
 | <kbd>F5</kbd> / <kbd>F6</kbd> / <kbd>F8</kbd> | Play / pause / stop |
+| <kbd>Ctrl</kbd>+<kbd>N</kbd> / <kbd>Alt</kbd>+<kbd>N</kbd> | New song wizard |
 | <kbd>Ctrl</kbd>+<kbd>O</kbd> | Open a module |
+| <kbd>Ctrl</kbd>+<kbd>P</kbd> / <kbd>Alt</kbd>+<kbd>P</kbd> | Song properties (metadata) |
 | <kbd>Ctrl</kbd>+<kbd>S</kbd> | Save as `.mod` |
 | <kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd> | Undo / redo |
 | <kbd>Alt</kbd>+<kbd>L</kbd> | Toggle song looping |
@@ -258,6 +315,8 @@ The application is deliberately layered, and every layer is a plain non-module I
 
 ```
 src/js/core/common.js       constants, period maths, effect tables, byte readers
+src/js/core/songfactory.js  makes songs from nothing: sample synthesis, the
+                            per-format defaults table, channel/pattern resizing
 src/js/formats/mod.js       ─┐
 src/js/formats/s3m.js        │  four parsers, one output shape
 src/js/formats/xm.js         │
@@ -270,6 +329,7 @@ src/js/export/modwriter.js   song → ProTracker .mod bytes, with a report
 src/js/app/audio.js          Web Audio graph, worklet bootstrap, messaging
 src/js/app/patterngrid.js    the canvas pattern editor
 src/js/app/visualizer.js     scope + spectrum
+src/js/app/dialogs.js        the new-song wizard and the properties editor
 src/js/app/app.js            UI controller, state, glue
 src/css/style.css            themes and layout
 src/html/index.template.html the page skeleton
@@ -398,12 +458,14 @@ Requires Node 14+ and nothing else: no npm install, no dependencies, no bundler.
 
 ## Tests
 
-Three Node harnesses run the real code — the same parsers and the same replay engine the browser uses — over every module in `testdata/`.
+Five Node harnesses run the real code — the same parsers, the same replay engine and the same dialog code the browser uses.
 
 ```bash
-node tools/test.js          # parse + render every module
+node tools/test.js          # parse + render every module in testdata/
 node tools/test-export.js   # export → re-parse → render round trip
 node tools/test-archive.js  # pack → unpack → byte-compare every archive format
+node tools/test-newsong.js  # created songs: play, export, resize, sample synthesis
+node tools/test-dialogs.js  # drive the wizard and the properties editor headlessly
 ```
 
 `tools/test.js` parses each module, asserts the metadata is sane, renders audio and asserts that it is finite, actually audible (non-trivial RMS), and that playback positions advance; it prints peak, RMS, parse time and render speed per file.
@@ -412,7 +474,11 @@ node tools/test-archive.js  # pack → unpack → byte-compare every archive for
 
 `tools/test-archive.js` builds fixtures with the system `zip`, `tar`, `gzip` and `arj` when they are present, adds the checked-in archives in `testdata/`, unpacks every member with the browser code and compares it **byte for byte** against the file it was made from — a decompressor that is nearly right produces plausible noise, so nothing weaker is worth asserting. It then re-parses each extracted module, and finishes with the negative cases: 30 bare modules and random bytes must not sniff as archives, and a deliberately corrupted deflate stream must be rejected rather than yield garbage.
 
-Current status: **30 passed / 0 failed** for the first two, **45 passed / 0 failed** for the archive harness.
+`tools/test-newsong.js` builds a song in each of the four formats and asserts it renders audibly and advances rows, that an instrument-less song is valid rather than broken, that MOD keeps its fixed 64 rows, that a created song survives a `.mod` export → re-parse → render round trip **with an empty writer report** (nothing transposed, nothing dropped), that growing and shrinking the channel count preserves the surviving data and keeps the song playing, and that every generated sample has sane peak, DC offset, loop and tuning — and is bit-for-bit reproducible between runs.
+
+`tools/test-dialogs.js` is the interesting one, because dialogs are usually where tests give up. It stubs just enough `document` to parse each rendered dialog body back into fake input/select/textarea elements, then clicks the dialog's own action buttons: the real `collect()`, `clampAll()`, `apply()` and `commit()` run. It checks that three Enters produce a playable song, that edits survive Back and Next, that switching format retunes the limits live, that nonsense input is clamped instead of corrupting the song, that shrinking channels over live data raises the confirmation and shrinking empty ones does not — and finally that **every id the dialog code reads back is actually rendered somewhere**, which is the failure mode a renamed field would otherwise cause silently.
+
+Current status: **30 passed / 0 failed** for the first two, **45 passed / 0 failed** for the archive harness, and all checks passing for the two song-creation harnesses.
 
 The LHA decoder was additionally cross-checked against `lhasa`: the same fixtures list and extract identically under both, at header levels 0, 1 and 2.
 
@@ -440,7 +506,8 @@ Needs `Uint8Array`/`Float32Array`, `Blob`, `URL.createObjectURL`, canvas, and We
 Stated plainly, because guessing is worse:
 
 - **`.mod` is the only export format.** S3M, XM and IT writers are not implemented; exporting a 40-channel IT song to MOD is lossy and the exporter says so before you download.
-- **Pattern editing only.** Sample editing (draw, trim, resample), envelope editing and order-list rearranging are not implemented; those panels are read-only.
+- **Pattern and metadata editing only.** You can create a song, edit its properties and edit its patterns, but sample editing (draw, trim, resample), envelope editing, importing your own samples and order-list rearranging are not implemented; those panels are read-only.
+- **Song structure is add-only after creation.** The properties dialog can grow or shrink the channel count and append patterns, but patterns cannot be deleted or reordered, and the order list cannot be edited by hand.
 - **No AdLib/OPL synthesis.** S3M AdLib instruments are parsed and skipped rather than emulated, so they are silent.
 - **Effect letters are always IT-style**, whatever the source format — deliberate, see above.
 - **MIDI, VST and pattern selection blocks** are out of scope.

@@ -20,17 +20,23 @@
 
   <!-- ------------------------------------------------------ toolbar -->
   <header class="bar" id="toolbar">
-    <div class="brand">
+    <!-- The wordmark doubles as the project link; it opens in a new tab so a
+         half-edited song is never thrown away by navigating off the page. -->
+    <a class="brand" href="https://github.com/g023/nybbletide_tracker"
+       target="_blank" rel="noopener noreferrer"
+       title="Nybbletide on GitHub (opens in a new tab)">
       <span class="logo">&#9835;</span>
       <span class="name">Nybble<b>tide</b></span>
-    </div>
+    </a>
 
+    <button id="newbtn" title="Start a new song from scratch (Ctrl+N / Alt+N)">New&hellip;</button>
     <button id="openbtn" class="primary" title="Open a module (Ctrl+O)">Open&hellip;</button>
     <button id="urlbtn" title="Load a module from a URL">URL</button>
     <input type="file" id="fileinput" accept=".mod,.s3m,.xm,.it,.zip,.arj,.lha,.lzh,.tar,.gz,.tgz,.MOD,.S3M,.XM,.IT,.ZIP,.ARJ,.LHA,.LZH" hidden>
 
     <span class="sep"></span>
 
+    <button id="songprops" title="Edit the song title, tempo, message and channel count (Ctrl+P / Alt+P)" disabled>Song&hellip;</button>
     <button id="savemod" title="Export the edited song as a ProTracker .mod (Ctrl+S)" disabled>Save .mod</button>
     <button id="savewav" title="Render the song to a 16-bit stereo .wav" disabled>Export .wav</button>
 
@@ -141,6 +147,10 @@
             <p class="hint">
               or press <kbd>Ctrl</kbd>+<kbd>O</kbd> to browse. Everything runs locally in
               your browser - nothing is uploaded anywhere.
+            </p>
+            <p class="hint">
+              Starting from nothing? <b>New&hellip;</b> in the toolbar (<kbd>Ctrl</kbd>+<kbd>N</kbd>)
+              builds a fresh song, samples and all.
             </p>
             <p class="hint">Press <kbd>F1</kbd> at any time for the full key map.</p>
           </div>
