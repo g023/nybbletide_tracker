@@ -1,0 +1,211 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Nybbletide - a MOD / S3M / XM / IT module player and pattern editor that runs entirely in the browser.">
+<meta name="author" content="g023">
+<meta name="color-scheme" content="light dark">
+<title>Nybbletide</title>
+<style>
+/*[[CSS]]*/
+</style>
+
+<!-- The AudioWorklet source lives here as inert text.  addModule() needs a
+     URL, and the brief demands a single file, so at startup the app turns
+     this element's text into a Blob URL.  type="text/worklet-js" means the
+     browser never executes or even parses it on the main thread. -->
+<script type="text/worklet-js" id="worklet-src">
+/*[[WORKLET]]*/
+</script>
+
+<div id="app">
+
+  <!-- ------------------------------------------------------ toolbar -->
+  <header class="bar" id="toolbar">
+    <div class="brand">
+      <span class="logo">&#9835;</span>
+      <span class="name">Nybble<b>tide</b></span>
+    </div>
+
+    <button id="openbtn" class="primary" title="Open a module (Ctrl+O)">Open&hellip;</button>
+    <button id="urlbtn" title="Load a module from a URL">URL</button>
+    <input type="file" id="fileinput" accept=".mod,.s3m,.xm,.it,.zip,.arj,.lha,.lzh,.tar,.gz,.tgz,.MOD,.S3M,.XM,.IT,.ZIP,.ARJ,.LHA,.LZH" hidden>
+
+    <span class="sep"></span>
+
+    <button id="savemod" title="Export the edited song as a ProTracker .mod (Ctrl+S)" disabled>Save .mod</button>
+    <button id="savewav" title="Render the song to a 16-bit stereo .wav" disabled>Export .wav</button>
+
+    <span class="spacer"></span>
+
+    <label class="ctl" title="Sample interpolation">
+      <span>Interp</span>
+      <select id="interp">
+        <option value="0">None</option>
+        <option value="1" selected>Linear</option>
+        <option value="2">Cubic</option>
+      </select>
+    </label>
+
+    <label class="ctl" title="Stereo separation">
+      <span>Stereo</span>
+      <input type="range" id="sep" min="0" max="1" step="0.05" value="1">
+      <b id="sepval">100%</b>
+    </label>
+
+    <label class="ctl" title="Master volume">
+      <span>Vol</span>
+      <input type="range" id="volume" min="0" max="1" step="0.01" value="0.8">
+      <b id="volumeval">80%</b>
+    </label>
+
+    <button id="helpbtn" title="Keyboard shortcuts and help (F1)">?</button>
+    <button id="themebtn" title="Toggle theme">&#9790;</button>
+  </header>
+
+  <!-- ---------------------------------------------------- transport -->
+  <div class="bar" id="transport">
+    <button id="play" class="tp" title="Play (F5)" disabled>&#9654;</button>
+    <button id="pause" class="tp" title="Pause (F6)" disabled>&#10073;&#10073;</button>
+    <button id="stop" class="tp" title="Stop (F8)" disabled>&#9632;</button>
+    <button id="loop" class="tp on" title="Loop the song when it ends (Alt+L)">&#8635;</button>
+
+    <span class="sep"></span>
+
+    <button id="follow" class="on" title="Scroll the pattern view with playback">Follow</button>
+    <button id="editmode" class="on" title="Allow pattern editing">Edit</button>
+    <button id="unmuteall" title="Clear every mute and solo">Unmute all</button>
+
+    <span class="sep"></span>
+
+    <label class="ctl" title="Base octave for the keyboard">
+      <span>Oct</span>
+      <select id="octave">
+        <option>1</option><option>2</option><option>3</option>
+        <option selected>4</option><option>5</option><option>6</option><option>7</option>
+      </select>
+    </label>
+    <label class="ctl" title="Rows the cursor advances after entering data">
+      <span>Step</span>
+      <select id="step">
+        <option>0</option><option selected>1</option><option>2</option>
+        <option>4</option><option>8</option><option>16</option>
+      </select>
+    </label>
+    <label class="ctl" title="Start playing as soon as a module is loaded">
+      <input type="checkbox" id="autoplay" checked><span>Autoplay</span>
+    </label>
+
+    <span class="spacer"></span>
+
+    <div class="readout">
+      <span>ord</span><b id="t-order">00/00</b>
+      <span>pat</span><b id="t-pattern">00</b>
+      <span>row</span><b id="t-row">00</b>
+      <span>spd</span><b id="t-speed">6</b>
+      <span>bpm</span><b id="t-tempo">125</b>
+      <span>voi</span><b id="t-voices">0</b>
+      <b id="t-time" class="wide">0:00 / 0:00</b>
+    </div>
+  </div>
+
+  <!-- --------------------------------------------------------- main -->
+  <main id="main">
+
+    <!-- left: orders + channels -->
+    <div class="col side" id="left">
+      <section class="panel">
+        <h2>Order list</h2>
+        <div id="orderlist" class="scroll"></div>
+      </section>
+      <section class="panel grow">
+        <h2>Channels</h2>
+        <div id="channels" class="scroll"></div>
+      </section>
+    </div>
+
+    <!-- centre: pattern -->
+    <div class="col" id="centre">
+      <section class="panel grow" id="patternpanel">
+        <h2>
+          Pattern editor
+          <small>click a cell, then type - notes on Z/Q rows, hex in the other columns</small>
+        </h2>
+        <div id="patternwrap">
+          <canvas id="pattern"></canvas>
+          <div id="welcome">
+            <h1>Drop a module anywhere</h1>
+            <p><b>.mod</b> &middot; <b>.s3m</b> &middot; <b>.xm</b> &middot; <b>.it</b></p>
+            <p class="hint">
+              Packed? Drop the archive itself - <b>.zip</b>, <b>.arj</b>, <b>.lha</b>,
+              <b>.lzh</b>, <b>.tar</b>, <b>.gz</b> are unpacked right here.
+            </p>
+            <p class="hint">
+              or press <kbd>Ctrl</kbd>+<kbd>O</kbd> to browse. Everything runs locally in
+              your browser - nothing is uploaded anywhere.
+            </p>
+            <p class="hint">Press <kbd>F1</kbd> at any time for the full key map.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- right: instruments, sample, scopes -->
+    <div class="col side" id="right">
+      <section class="panel grow">
+        <h2>Instruments</h2>
+        <div id="instlist" class="scroll"></div>
+      </section>
+      <section class="panel">
+        <h2>Sample</h2>
+        <canvas id="waveform"></canvas>
+        <div id="sampleinfo"></div>
+      </section>
+      <section class="panel">
+        <h2>Scope</h2>
+        <canvas id="scope"></canvas>
+      </section>
+      <section class="panel">
+        <h2>Spectrum</h2>
+        <canvas id="spectrum"></canvas>
+      </section>
+    </div>
+  </main>
+
+  <!-- ------------------------------------------------------- status -->
+  <footer class="bar" id="status">
+    <div class="info">
+      <span>title</span><b id="i-title">-</b>
+      <span>format</span><b id="i-format">-</b>
+      <span>ch</span><b id="i-channels">-</b>
+      <span>pat</span><b id="i-patterns">-</b>
+      <span>ord</span><b id="i-orders">-</b>
+      <span>smp</span><b id="i-samples">-</b>
+      <span>length</span><b id="i-length">-</b>
+    </div>
+    <span class="spacer"></span>
+    <div class="msg" id="statusmsg"></div>
+    <span class="spacer"></span>
+    <div class="info">
+      <span>engine</span><b id="i-engine">-</b>
+      <span>rate</span><b id="i-rate">-</b>
+    </div>
+  </footer>
+</div>
+
+<!-- drag-and-drop overlay -->
+<div id="drop"><div class="inner">Drop the module or archive to load it</div></div>
+
+<!-- modal -->
+<div id="modal">
+  <div class="dialog">
+    <div class="head">
+      <h3 id="modaltitle"></h3>
+      <button id="modalclose" title="Close">&times;</button>
+    </div>
+    <div id="modalcontent"></div>
+    <div id="modalactions"></div>
+  </div>
+</div>
+
+<script>
+/*[[JS]]*/
+</script>

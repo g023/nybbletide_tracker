@@ -1,0 +1,522 @@
+/* =====================================================================
+ * style.css -- Nybbletide
+ *
+ * Design notes
+ * ------------
+ * The visual language borrows the *information density* of FastTracker II
+ * and OpenMPT (monospaced pattern grid, hex everywhere, VU meters) but
+ * drops the 1994 chrome: no bevelled buttons, no 16-colour palette. The
+ * friendliness comes from FL Studio - large hit targets, colour-coded
+ * columns, soft panels and a single accent colour.
+ *
+ * Both themes are defined as custom properties on :root so the toggle is a
+ * one-attribute change, and so the canvas renderers can read the very same
+ * colours via getComputedStyle instead of duplicating a palette in JS.
+ * ===================================================================== */
+
+:root {
+  --bg: #eef0f4;
+  --bg-panel: #ffffff;
+  --bg-sunken: #e4e7ee;
+  --bg-row: #f7f8fb;
+  --bg-row-alt: #eceff5;
+  --bg-beat: #e2e8f6;
+  --bg-measure: #d6e0f5;
+  --fg: #1c2230;
+  --fg-dim: #66708a;
+  --fg-faint: #a8b0c4;
+  --border: #ccd2e0;
+  --border-strong: #aab3c8;
+  --accent: #2f6df6;
+  --accent-soft: #dbe6ff;
+  --accent-fg: #ffffff;
+  --note: #1a5fd0;
+  --inst: #0e8a5f;
+  --vol: #b3651b;
+  --fx: #9333c4;
+  --cursor: #2f6df6;
+  --cursor-bg: rgba(47, 109, 246, 0.18);
+  --playrow: rgba(255, 196, 0, 0.28);
+  --danger: #d2323c;
+  --ok: #14915c;
+  --scope: #2f6df6;
+  --scope2: #14b58a;
+  --shadow: 0 1px 2px rgba(20, 28, 50, 0.08), 0 4px 14px rgba(20, 28, 50, 0.06);
+  --radius: 8px;
+  --mono: ui-monospace, "SFMono-Regular", "JetBrains Mono", "Cascadia Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  --ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #14161c;
+  --bg-panel: #1c1f27;
+  --bg-sunken: #101218;
+  --bg-row: #191c23;
+  --bg-row-alt: #15181e;
+  --bg-beat: #1f2530;
+  --bg-measure: #26303f;
+  --fg: #e6e9f0;
+  --fg-dim: #939cb0;
+  --fg-faint: #5c6478;
+  --border: #2b2f3a;
+  --border-strong: #3b4150;
+  --accent: #5b8dff;
+  --accent-soft: #23304d;
+  --accent-fg: #0b0d12;
+  --note: #7fb0ff;
+  --inst: #4fd6a0;
+  --vol: #ffb066;
+  --fx: #d597ff;
+  --cursor: #5b8dff;
+  --cursor-bg: rgba(91, 141, 255, 0.22);
+  --playrow: rgba(255, 196, 0, 0.16);
+  --danger: #ff6b74;
+  --ok: #3ddb96;
+  --scope: #5b8dff;
+  --scope2: #3ddb96;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--ui);
+  font-size: 13px;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  height: 100%;
+  gap: 8px;
+  padding: 8px;
+}
+
+/* ---------------------------------------------------------------- bars */
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  box-shadow: var(--shadow);
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-size: 15px;
+  margin-right: 4px;
+  user-select: none;
+}
+.brand .dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent);
+  display: inline-block;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.brand small { color: var(--fg-faint); font-weight: 500; font-size: 11px; }
+/* Wordmark: "Nybble" in the normal foreground, "tide" in the accent. */
+.brand .name b { color: var(--accent); font-weight: 700; }
+
+.spacer { flex: 1 1 auto; }
+
+button, .btn {
+  font: inherit;
+  font-weight: 600;
+  color: var(--fg);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 6px 11px;
+  cursor: pointer;
+  line-height: 1.2;
+  transition: background 0.12s, border-color 0.12s, transform 0.05s;
+  white-space: nowrap;
+}
+button:hover, .btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+button:active { transform: translateY(1px); }
+button:disabled { opacity: 0.45; cursor: default; }
+button:disabled:hover { background: var(--bg-panel); border-color: var(--border-strong); }
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+button.primary:hover { filter: brightness(1.08); background: var(--accent); }
+button.on { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+button.icon { padding: 6px 9px; font-size: 14px; min-width: 34px; }
+
+label.field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--fg-dim);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+select, input[type="number"], input[type="text"] {
+  font: inherit;
+  color: var(--fg);
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 4px 6px;
+}
+input[type="range"] { accent-color: var(--accent); width: 100px; }
+
+.readout {
+  font-family: var(--mono);
+  font-size: 12px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+.readout span {
+  color: var(--fg-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-left: 10px;
+}
+.readout span:first-child { margin-left: 0; }
+.readout b { color: var(--accent); font-weight: 700; margin-left: 4px; }
+.readout b.wide { margin-left: 14px; color: var(--fg); }
+
+/* ------------------------------------------------------------- layout */
+#main {
+  display: grid;
+  grid-template-columns: 250px minmax(320px, 1fr) 272px;
+  gap: 8px;
+  min-height: 0;
+}
+.col { display: flex; flex-direction: column; gap: 8px; min-height: 0; min-width: 0; }
+
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  /* Panels keep their natural height; only the ones marked .grow give way,
+   * otherwise a tall column silently clips the sample details. */
+  flex: 0 0 auto;
+}
+.panel.grow { flex: 1 1 0; }
+.panel > h2 {
+  margin: 0;
+  padding: 7px 10px;
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-sunken);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+.panel > h2 .spacer { flex: 1; }
+.panel > h2 button { padding: 2px 7px; font-size: 10px; }
+.panel .body { overflow: auto; min-height: 0; flex: 1; }
+.panel .body.pad { padding: 8px 10px; }
+
+/* --------------------------------------------------------- drop zone */
+#drop {
+  position: fixed;
+  inset: 0;
+  background: rgba(47, 109, 246, 0.16);
+  backdrop-filter: blur(3px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  pointer-events: none;
+}
+#drop.show { display: flex; }
+#drop .inner {
+  background: var(--bg-panel);
+  border: 3px dashed var(--accent);
+  border-radius: 16px;
+  padding: 44px 64px;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+#drop .inner small { display: block; font-weight: 500; font-size: 13px; color: var(--fg-dim); margin-top: 8px; }
+
+#welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+  height: 100%;
+  padding: 24px;
+  color: var(--fg-dim);
+}
+#welcome h1 { margin: 0; font-size: 24px; color: var(--fg); letter-spacing: -0.02em; }
+#welcome p { margin: 0; max-width: 46ch; line-height: 1.6; }
+#welcome .exts { font-family: var(--mono); color: var(--accent); font-weight: 700; }
+
+/* ------------------------------------------------------- order list */
+/* Scrollable panel bodies.  min-height:0 is the flexbox incantation that
+ * lets a flex child actually shrink below its content and scroll. */
+.scroll { overflow: auto; min-height: 0; flex: 1 1 auto; }
+.scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+.scroll::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 6px; border: 3px solid var(--bg-panel); }
+.scroll::-webkit-scrollbar-track { background: transparent; }
+
+#orderlist { display: flex; flex-wrap: wrap; gap: 3px; padding: 8px; max-height: 168px; }
+.ord {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  min-width: 30px;
+  text-align: center;
+}
+.ord:hover { border-color: var(--accent); }
+.ord.current { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 700; }
+.ord.marker { opacity: 0.5; font-style: italic; }
+
+/* --------------------------------------------------- pattern editor */
+#patternwrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: var(--bg-sunken);
+  overflow: hidden;
+}
+#pattern { display: block; width: 100%; height: 100%; cursor: text; }
+#patternwrap.nofocus::after {
+  content: "click the grid to edit";
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  font-size: 10px;
+  color: var(--fg-faint);
+  pointer-events: none;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* --------------------------------------------------------- channels */
+#channels { display: flex; flex-direction: column; gap: 3px; padding: 6px; }
+.chan {
+  display: grid;
+  grid-template-columns: 26px 1fr auto auto;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.chan .num { color: var(--fg-faint); text-align: right; }
+.chan .meter {
+  height: 12px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+.chan .meter i {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--ok), #d8c832 72%, var(--danger));
+  transition: width 0.05s linear;
+}
+.chan .meter span {
+  position: absolute;
+  left: 4px; top: 0;
+  font-size: 9px;
+  line-height: 12px;
+  color: var(--fg-dim);
+  mix-blend-mode: difference;
+  pointer-events: none;
+}
+.chan button {
+  padding: 1px 5px;
+  font-size: 10px;
+  border-radius: 4px;
+  font-family: var(--ui);
+}
+.chan button.m.on { background: var(--danger); border-color: var(--danger); color: #fff; }
+.chan button.s.on { background: var(--ok); border-color: var(--ok); color: #fff; }
+.chan.muted .num, .chan.muted .meter { opacity: 0.4; }
+
+/* ------------------------------------------------------ instruments */
+#instlist { display: flex; flex-direction: column; }
+/* Both lists are flex columns inside a scroller with a bounded height, so
+ * their rows have to opt out of shrinking - otherwise a 99-instrument module
+ * squashes every row until the labels overlap instead of scrolling. */
+.inst, .chan { flex: 0 0 auto; }
+.inst {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: 6px;
+  padding: 3px 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.inst:hover { background: var(--accent-soft); }
+.inst.sel { background: var(--accent); color: var(--accent-fg); }
+.inst .n { color: var(--fg-faint); }
+.inst.sel .n { color: var(--accent-fg); opacity: 0.75; }
+.inst.empty { opacity: 0.45; }
+.inst .name { overflow: hidden; text-overflow: ellipsis; }
+
+#waveform { display: block; width: 100%; height: 116px; background: var(--bg-sunken); }
+#sampleinfo {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--fg-dim);
+  padding: 6px 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 10px;
+  border-top: 1px solid var(--border);
+}
+#sampleinfo b { color: var(--fg); font-weight: 600; }
+
+/* ------------------------------------------------------ visualisers */
+#scope, #spectrum { display: block; width: 100%; background: var(--bg-sunken); }
+#scope { height: 78px; }
+#spectrum { height: 104px; }
+
+/* ---------------------------------------------------------- status */
+#status {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--fg-dim);
+  padding: 6px 10px;
+}
+#status .info { display: flex; align-items: baseline; gap: 4px; flex-wrap: wrap; min-width: 0; }
+#status .info span {
+  color: var(--fg-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 10px;
+  margin-left: 10px;
+}
+#status .info span:first-child { margin-left: 0; }
+#status .info b {
+  color: var(--fg);
+  font-weight: 600;
+  font-family: var(--mono);
+  max-width: 26ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#status .k { color: var(--fg-faint); text-transform: uppercase; letter-spacing: 0.05em; font-size: 10px; }
+#status b { color: var(--fg); font-weight: 600; }
+#status .msg { color: var(--accent); font-weight: 600; }
+#status .msg.err { color: var(--danger); }
+
+/* ---------------------------------------------------------- dialog */
+#modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 10, 16, 0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  padding: 20px;
+}
+#modal.show { display: flex; }
+#modal .sheet {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  max-width: 620px;
+  width: 100%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#modal h3 { margin: 0; padding: 14px 18px; border-bottom: 1px solid var(--border); font-size: 15px; }
+#modal .content { padding: 14px 18px; overflow: auto; line-height: 1.55; }
+#modal .content ul { margin: 6px 0; padding-left: 20px; }
+#modal .content li { margin: 3px 0; }
+#modal .content code, #modal .content kbd {
+  font-family: var(--mono);
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 11px;
+}
+#modal .actions { padding: 12px 18px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+#modal table { width: 100%; border-collapse: collapse; font-size: 12px; }
+#modal td { padding: 3px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+#modal td:first-child { width: 34%; color: var(--fg-dim); }
+
+/* Archive picker: a file list, so the columns are sized the other way
+ * round from the help table and every row is a click target. */
+#modal .arclist td:first-child { width: auto; color: inherit; }
+#modal .arclist .arcrow { cursor: pointer; }
+#modal .arclist .arcrow:hover td,
+#modal .arclist .arcrow:focus td { background: var(--bg-hover, rgba(127, 127, 127, 0.14)); }
+#modal .arclist .arcrow:focus { outline: none; }
+#modal .arclist .arcrow.likely .arcname { color: var(--accent); font-weight: 600; }
+#modal .arclist .arcname { word-break: break-all; font-family: var(--mono, monospace); }
+#modal .arclist .arcsize,
+#modal .arclist .arcmethod { width: 1%; white-space: nowrap; text-align: right; color: var(--fg-faint); }
+
+/* --------------------------------------------------------- helpers */
+.hint { color: var(--fg-faint); font-size: 11px; }
+.hidden { display: none !important; }
+.scroll-thin::-webkit-scrollbar { width: 10px; height: 10px; }
+.scroll-thin::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 6px; border: 3px solid var(--bg-panel); }
+.scroll-thin::-webkit-scrollbar-track { background: transparent; }
+
+/* ------------------------------------------------------ responsive */
+@media (max-width: 1180px) {
+  #main { grid-template-columns: 210px minmax(280px, 1fr) 236px; }
+}
+@media (max-width: 950px) {
+  body { overflow: auto; }
+  #app { height: auto; min-height: 100%; }
+  #main { grid-template-columns: 1fr; }
+  #patternwrap { height: 60vh; }
+  .col.side { flex-direction: row; flex-wrap: wrap; }
+  .col.side .panel { flex: 1 1 260px; }
+}
