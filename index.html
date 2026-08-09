@@ -486,7 +486,15 @@ input[type="range"] { accent-color: var(--accent); width: 100px; }
   flex-direction: column;
   overflow: hidden;
 }
-#modal h3 { margin: 0; padding: 14px 18px; border-bottom: 1px solid var(--border); font-size: 15px; }
+#modal .head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+#modal h3 { margin: 0; flex: 1; font-size: 15px; }
+#modalclose { padding: 2px 9px; font-size: 15px; line-height: 1.2; }
 #modal .content { padding: 14px 18px; overflow: auto; line-height: 1.55; }
 #modal .content ul { margin: 6px 0; padding-left: 20px; }
 #modal .content li { margin: 3px 0; }
@@ -3407,13 +3415,13 @@ input[type="range"] { accent-color: var(--accent); width: 100px; }
 
 <!-- modal -->
 <div id="modal">
-  <div class="dialog">
+  <div class="sheet">
     <div class="head">
       <h3 id="modaltitle"></h3>
       <button id="modalclose" title="Close">&times;</button>
     </div>
-    <div id="modalcontent"></div>
-    <div id="modalactions"></div>
+    <div class="content" id="modalcontent"></div>
+    <div class="actions" id="modalactions"></div>
   </div>
 </div>
 
